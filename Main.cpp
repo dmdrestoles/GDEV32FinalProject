@@ -245,6 +245,26 @@ void ProcessMouse(GLFWwindow* window, double xpos, double ypos)
 	target = glm::normalize(lookField);
 }
 
+float revolutionSpeed = 1.f;
+void ProcessRevolutionSpeed(GLFWwindow* window, float& revolutionSpeed) {
+	int upKey = glfwGetKey(window, GLFW_KEY_UP);
+	int downKey = glfwGetKey(window, GLFW_KEY_DOWN);
+	int rKey = glfwGetKey(window, GLFW_KEY_R);
+
+	if (upKey == GLFW_PRESS)
+	{
+		revolutionSpeed += 1.0f;
+	}
+	if (downKey == GLFW_PRESS) {
+		revolutionSpeed -= 1.0f;
+	}
+	if (rKey == GLFW_PRESS) {
+		revolutionSpeed = 1.0f;
+	}
+
+	revolutionSpeed = fmax(revolutionSpeed, 1.0f);
+}
+
 void GenerateSphereVertices(std::vector<Vertex>& vertices, std::vector<int>& indices, float radius, int sectorCount, int stackCount, float color[3])
 {
 	// xyz, rgb, uv
@@ -467,8 +487,8 @@ int main()
 	// 'imageWidth' and imageHeight will contain the width and height of the loaded image respectively
 	int imageWidth, imageHeight, numChannels;
 
-	// Read the image data of our eye.jpg image, and store it in an unsigned char array
-	unsigned char* imageData = stbi_load("eye.jpg", &imageWidth, &imageHeight, &numChannels, 0);
+	// Read the image data of our white.jpg image, and store it in an unsigned char array
+	unsigned char* imageData = stbi_load("blank.jpg", &imageWidth, &imageHeight, &numChannels, 0);
 
 	// Make sure that we actually loaded the image before uploading the data to the GPU
 	if (imageData != nullptr)
@@ -498,45 +518,7 @@ int main()
 	}
 	else
 	{
-		std::cerr << "Failed to load eye.jpg" << std::endl;
-	}
-
-	// Create our other texture (wings.jpg)
-	GLuint tex1;
-	glGenTextures(1, &tex1);
-
-	// Read the image data of our bioshock.jpg image
-	imageData = stbi_load("wings.jpg", &imageWidth, &imageHeight, &numChannels, 0);
-
-	// Make sure that we actually loaded the image before uploading the data to the GPU
-	if (imageData != nullptr)
-	{
-		// Our texture is 2D, so we bind our texture to the GL_TEXTURE_2D target
-		glBindTexture(GL_TEXTURE_2D, tex1);
-
-		// Set the filtering methods for magnification and minification
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-		// Set the wrapping method for the s-axis (x-axis) and t-axis (y-axis)
-		// Try experimenting with different wrapping methods introduced in the textures slide set
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-		// Upload the image data to GPU memory
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
-
-		// If we set minification to use mipmaps, we can tell OpenGL to generate the mipmaps for us
-		//glGenerateMipmap(GL_TEXTURE_2D);
-
-		// Once we have copied the data over to the GPU, we can delete
-		// the data on the CPU side, since we won't be using it anymore
-		stbi_image_free(imageData);
-		imageData = nullptr;
-	}
-	else
-	{
-		std::cerr << "Failed to load wings.jpg" << std::endl;
+		std::cerr << "Failed to load white.jpg" << std::endl;
 	}
 
 	// Create a shader program
@@ -556,8 +538,8 @@ int main()
 	glfwSetCursorPos(window, xMousePos, yMousePos);
 
 	// Declaration of camera units
-	glm::vec3 cameraPosition = { 0.0f, 0.0f, 3.0f };
-	target = { 0.0f, 0.0f, -1.0f }; // Target is a specific point that the camera is looking at
+	glm::vec3 cameraPosition = { 0.0f, 200.0f, 0.f };
+	target = { 0.0f, 0.0f, 0.0f }; // Target is a specific point that the camera is looking at
 	glm::vec3 up = { 0.0f, 1.0f, 0.0f }; // Global up vector (which will be used by the lookAt function to calculate the camera's right and up vectors)
 
 	glm::vec3 eye = cameraPosition;
@@ -608,25 +590,25 @@ int main()
 		glUniform3fv(ambientColorUniform, 1, glm::value_ptr(ambientColor));
 
 		// Diffuse
-		glm::vec3 lightPos = glm::vec3(0.0f, 5.0f, 5.0f);
+		glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 		GLint lightPosUniform = glGetUniformLocation(program, "ptLight.position");
 		glUniform3fv(lightPosUniform, 1, glm::value_ptr(lightPos));
 
-		glm::vec3 diffuseColor = glm::vec3(0.5294f, 0.8078f, 0.9216f);
-		//glm::vec3 diffuseColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		//glm::vec3 diffuseColor = glm::vec3(0.5294f, 0.8078f, 0.9216f);
+		glm::vec3 diffuseColor = glm::vec3(1.0f, 1.0f, 1.0f);
 		GLint diffuseColorUniform = glGetUniformLocation(program, "ptLight.diffuse");
 		glUniform3fv(diffuseColorUniform, 1, glm::value_ptr(diffuseColor));
 
 		// Specular
-		glm::vec3 specularColor = glm::vec3(0.5294f, 0.8078f, 0.9216f);
-		// glm::vec3 specularColor = glm::vec3(1.0f, 1.0f, 1.0f);
+		//glm::vec3 specularColor = glm::vec3(0.5294f, 0.8078f, 0.9216f);
+		glm::vec3 specularColor = glm::vec3(1.0f, 1.0f, 1.0f);
 		GLint specularColorUniform = glGetUniformLocation(program, "ptLight.specular");
 		glUniform3fv(specularColorUniform, 1, glm::value_ptr(specularColor));
 
 		GLint eyePositionUniform = glGetUniformLocation(program, "eye");
 		glUniform3fv(eyePositionUniform, 1, glm::value_ptr(eye));
 
-		glm::vec3 objectSpecular = glm::vec3(0.5294f, 0.8078f, 0.9216f);
+		glm::vec3 objectSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
 		GLint objectSpecularUniform = glGetUniformLocation(program, "ptLight.objectSpecular");
 		glUniform3fv(objectSpecularUniform, 1, glm::value_ptr(objectSpecular));
 		
@@ -634,37 +616,9 @@ int main()
 		GLint objectShininessUniform = glGetUniformLocation(program, "ptLight.shininess");
 		glUniform1i(objectShininessUniform, objectShininess);
 
-		glm::vec3 pointLightAttenuation = glm::vec3(0.017, 0.07f, 1.0f);
+		glm::vec3 pointLightAttenuation = glm::vec3(0.0f, 0.f, 1.0f);
 		GLint plAttenuationUniform = glGetUniformLocation(program, "ptLight.attenuation");
 		glUniform3fv(plAttenuationUniform, 1, glm::value_ptr(pointLightAttenuation));
-		
-		// Directional light
-		glm::vec3 directionalLightVector = glm::vec3(0.0f, 0.0f, -20.0f);
-		GLint directionalLightVectorUniform = glGetUniformLocation(program, "dirLight.direction");
-		glUniform3fv(directionalLightVectorUniform, 1, glm::value_ptr(directionalLightVector));
-
-		glm::vec3 directionalAmbientColor = glm::vec3(0.82f, 0.65f, 0.13f);
-		//glm::vec3 directionalAmbientColor = glm::vec3(1.0f, 1.0f, 1.0f);
-		GLint directionalAmbientColorUniform = glGetUniformLocation(program, "dirLight.ambient");
-		glUniform3fv(directionalAmbientColorUniform, 1, glm::value_ptr(directionalAmbientColor));
-
-		//glm::vec3 directionalDiffuseColor = glm::vec3(0.0f, 0.0f, 0.0f);
-		glm::vec3 directionalDiffuseColor = glm::vec3(0.82f, 0.65f, 0.13f);
-		//glm::vec3 directionalDiffuseColor = glm::vec3(1.0f, 0.0f, 0.0f);
-		GLint directionalDiffuseColorUniform = glGetUniformLocation(program, "dirLight.diffuse");
-		glUniform3fv(directionalDiffuseColorUniform, 1, glm::value_ptr(directionalDiffuseColor));
-
-		glm::vec3 directionalSpecularColor = glm::vec3(0.82f, 0.65f, 0.13f);
-		//glm::vec3 directionalSpecularColor = glm::vec3(0.0f, 0.0f, 0.0f);
-		GLint directionalSpecularColorUniform = glGetUniformLocation(program, "dirLight.specular");
-		glUniform3fv(directionalSpecularColorUniform, 1, glm::value_ptr(directionalSpecularColor));
-
-		glm::vec3 directionalObjectSpecularColor = glm::vec3(1.0f, 1.0f, 1.0f);
-		GLint dirLightObjectSpecularUniform = glGetUniformLocation(program, "dirLight.objectSpecular");
-		glUniform3fv(dirLightObjectSpecularUniform, 1, glm::value_ptr(directionalObjectSpecularColor));
-
-		GLint dirLightObjectShininessUniform = glGetUniformLocation(program, "dirLight.shininess");
-		glUniform1i(dirLightObjectShininessUniform, objectShininess);
 		
 		glm::vec3 spotlightColor = glm::vec3(1.0f, 1.0f, 1.0f);
 		GLint spotlightColorUniform = glGetUniformLocation(program, "spotlight.ambient");
@@ -702,7 +656,7 @@ int main()
 		float fieldOfViewY = glm::radians(60.0f); // Field of view
 		float aspectRatio = windowWidth * 1.0f / windowHeight; // Aspect ratio, which is the ratio between width and height
 		float nearPlane = 0.1f; // Near plane, minimum distance from the camera where things will be rendered
-		float farPlane = 100.0f; // Far plane, maximum distance from the camera where things will be rendered
+		float farPlane = 500.0f; // Far plane, maximum distance from the camera where things will be rendered
 		glm::mat4 projectionMatrix = glm::perspective(fieldOfViewY, aspectRatio, nearPlane, farPlane);
 
 		GLint projectionMatrixUniform = glGetUniformLocation(program, "projectionMatrix");
@@ -715,9 +669,6 @@ int main()
 		glBindVertexArray(vao2);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex1);
-
 		glm::mat4 sphereTransforms(1.0f);
 		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransforms));
 		glDrawElements(GL_TRIANGLES, sphereLightIndices.size(), GL_UNSIGNED_INT, (void*)0);
@@ -725,15 +676,15 @@ int main()
 		float x1, z1;
 		// Declaration of elliptical constants
 		Planet currentPlanet;
-		const float distScale = 10.f;
+		const float distScale = 1.f;
 		glm::mat4 sphereTransform2 = glm::mat4(1.0f);
 
 		Planet mercury;
-		mercury.radius = 0.1f;
-		mercury.majorAxis = 1.38f * distScale;
+		mercury.radius = 0.244f;
+		mercury.majorAxis = 5.7f * distScale;
 		mercury.eccentricity = 0.205f;
 		mercury.ComputeMinorAxis();
-		mercury.speed = 375.0f;
+		mercury.speed = 4.15f * revolutionSpeed;
 		mercury.cx = 0.f;
 		mercury.cy = 0.f;
 		mercury.cz = 0.f;
@@ -751,11 +702,11 @@ int main()
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 
 		Planet venus;
-		venus.radius = 1.02f;
-		venus.majorAxis = 1.72f * distScale;
+		venus.radius = 0.6502f;
+		venus.majorAxis = 10.8f * distScale;
 		venus.eccentricity = 0.007;
 		venus.ComputeMinorAxis();
-		venus.speed = 145.161f;
+		venus.speed = 1.62 * revolutionSpeed;
 		venus.cx = 0.f;
 		venus.cy = 0.f;
 		venus.cz = 0.f;
@@ -773,11 +724,11 @@ int main()
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 
 		Planet earth;
-		earth.radius = 1.0f;
-		earth.majorAxis = 2.0f * distScale;
+		earth.radius = 0.6371f;
+		earth.majorAxis = 14.9f * distScale;
 		earth.eccentricity = 0.017;
 		earth.ComputeMinorAxis();
-		earth.speed = 90.f;
+		earth.speed = 1 * revolutionSpeed;
 		earth.cx = 0.f;
 		earth.cy = 0.f;
 		earth.cz = 0.f;
@@ -795,11 +746,11 @@ int main()
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 
 		Planet mars;
-		mars.radius = 0.53f;
-		mars.majorAxis = 2.52f * distScale;
+		mars.radius = 0.339f;
+		mars.majorAxis = 22.8f * distScale;
 		mars.eccentricity = 0.093;
 		mars.ComputeMinorAxis();
-		mars.speed = 47.872;
+		mars.speed = 0.53f * revolutionSpeed;
 		mars.cx = 0.f;
 		mars.cy = 0.f;
 		mars.cz = 0.f;
@@ -816,9 +767,99 @@ int main()
 		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 
+		Planet jupiter;
+		jupiter.radius = 6.991f;
+		jupiter.majorAxis = 89.f * distScale;
+		jupiter.eccentricity = 0.084;
+		jupiter.ComputeMinorAxis();
+		jupiter.speed = 0.08f * revolutionSpeed;
+		jupiter.cx = 0.f;
+		jupiter.cy = 0.f;
+		jupiter.cz = 0.f;
+		jupiter.angle = 0.f;
+
+		currentPlanet = jupiter;
+		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+
+		sphereTransform2 = glm::mat4(1.0f);
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
+		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
+		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
+		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+
+		Planet saturn;
+		saturn.radius = 5.8232f;
+		saturn.majorAxis = 143.7f * distScale;
+		saturn.eccentricity = 0.054f;
+		saturn.ComputeMinorAxis();
+		saturn.speed = 0.03f * revolutionSpeed;
+		saturn.cx = 0.f;
+		saturn.cy = 0.f;
+		saturn.cz = 0.f;
+		saturn.angle = 0.f;
+
+		currentPlanet = saturn;
+		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+
+		sphereTransform2 = glm::mat4(1.0f);
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
+		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
+		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
+		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+
+		Planet uranus;
+		uranus.radius = 2.5362f;
+		uranus.majorAxis = 287.1f * distScale;
+		uranus.eccentricity = 0.047f;
+		uranus.ComputeMinorAxis();
+		uranus.speed = 0.0119f * revolutionSpeed;
+		uranus.cx = 0.f;
+		uranus.cy = 0.f;
+		uranus.cz = 0.f;
+		uranus.angle = 0.f;
+
+		currentPlanet = uranus;
+		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+
+		sphereTransform2 = glm::mat4(1.0f);
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
+		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
+		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
+		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+
+		Planet neptune;
+		neptune.radius = 2.4622f;
+		neptune.majorAxis = 453.0f * distScale;
+		neptune.eccentricity = 0.008f;
+		neptune.ComputeMinorAxis();
+		neptune.speed = 0.0061f * revolutionSpeed;
+		neptune.cx = 0.f;
+		neptune.cy = 0.f;
+		neptune.cz = 0.f;
+		neptune.angle = 0.f;
+
+		currentPlanet = uranus;
+		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
+
+		sphereTransform2 = glm::mat4(1.0f);
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
+		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
+		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
+		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
+		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+
 		// Movement
 		glfwGetCursorPos(window, &xMousePos, &yMousePos);
 		ProcessMovement(window, eye, target, up, moveSpeed);
+		ProcessRevolutionSpeed(window, revolutionSpeed);
+		std::cout << "Revolution speed:" << revolutionSpeed << std::endl;
 		glfwSetCursorPosCallback(window, ProcessMouse);
 
 		// "Unuse" the vertex array object
@@ -845,7 +886,6 @@ int main()
 
 	// Delete our textures
 	glDeleteTextures(1, &tex0);
-	glDeleteTextures(1, &tex1);
 
 	// Remember to tell GLFW to clean itself up before exiting the application
 	glfwTerminate();

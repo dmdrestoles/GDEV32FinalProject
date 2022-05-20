@@ -203,6 +203,7 @@ void main()
 	plDiffuse.diffuse = ptLightAttenuationFactor * ComputeDiffuse(plDiffuse);
 	plSpecular.specular = ptLightAttenuationFactor * ComputeSpecular(plSpecular);
 	
+	/*
 	// Directional light
 	dlAmbience.color = dirLight.ambient;
 	dlAmbience.strength = 0.9f;
@@ -225,7 +226,7 @@ void main()
 	dlAmbience.ambience = ComputeDirAmbience(dlAmbience);
 	dlDiffuse.diffuse = ComputeDirDiffuse(dlDiffuse);
 	dlSpecular.specular = ComputeDirSpecular(dlSpecular);
-	
+	*/
 	// Spotlight
 	spAmbience.color = spotlight.ambient;
 	spAmbience.strength = 0.9f;
@@ -263,9 +264,9 @@ void main()
 	spDiffuse.diffuse *= intensity;
 	spSpecular.specular *= intensity;
 
-	vec3 averageAmbience = (plAmbience.ambience + dlAmbience.ambience + spAmbience.ambience) / 3.0f;
+	vec3 averageAmbience = (plAmbience.ambience + spAmbience.ambience) / 3.0f;
 
-	vec3 finalLightColor = (averageAmbience + ((plDiffuse.diffuse + dlDiffuse.diffuse + spDiffuse.diffuse) + (plSpecular.specular + dlSpecular.specular + spSpecular.specular))) * outColor;
+	vec3 finalLightColor = (averageAmbience + ((plDiffuse.diffuse + spDiffuse.diffuse) + (plSpecular.specular + spSpecular.specular))) * outColor;
 	//vec3 finalLightColor = (plAmbience.ambience + plDiffuse.diffuse + plSpecular.specular) * outColor;
 	vec4 processedLight = vec4(finalLightColor, 1.0f);
 	vec4 sampledColor = texture(tex, outUV);

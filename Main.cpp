@@ -434,63 +434,64 @@ int main()
 	float zP[3] = { 0.0f, 0.0f, 1.0f };
 	float zN[3] = { 0.0f, 0.0f, -1.0f };
 
+	float center0[3] = { 0.f, 0.f, 0.5f };
+	float center1[3] = { -0.5f, 0.f, 0.f };
+	float center2[3] = { 0.f, 0.f, -0.5f };
+	float center3[3] = { 0.5f, 0.f, 0.f };
+	float center4[3] = { 0.f, 0.5f, 0.f };
+	float center5[3] = { 0.f, -0.5f, 0.f };
+
 	// Set up the data for each vertex of the quad
 	// These vertices are in LOCAL SPACE
 	Vertex vertices[36];
-	// Position				// Normals				// Color				// UV
-	vertices[0] = { 0, 0, 0.5f,				zP[0], zP[1], zP[2],	255,255,255,		0.5f, 0.5f };
-	vertices[1] = { v7,						zP,						255,255,255,		1.0f, 1.0f };
-	vertices[2] = { v3,						zP,						255,255,255,		0.0f, 1.0f };
-	vertices[3] = { v1,						zP,						255,255,255,		0.0f, 0.0f };
-	vertices[4] = { v5,						zP,						255,255,255,		1.0f, 0.0f };
-	vertices[5] = { v7,						zP,						255,255,255,		1.0f, 1.0f };
+					// Position				// Normals				// Color				// UV
+	vertices[0] = { center0,		zP,		255,255,255,		0.5f, 0.5f };
+	vertices[1] = { v7,				zP,		255,255,255,		1.0f, 1.0f };
+	vertices[2] = { v3,				zP,		255,255,255,		0.0f, 1.0f };
+	vertices[3] = { v1,				zP,		255,255,255,		0.0f, 0.0f };
+	vertices[4] = { v5,				zP,		255,255,255,		1.0f, 0.0f };
+	vertices[5] = { v7,				zP,		255,255,255,		1.0f, 1.0f };
 
-	vertices[6] = { -0.5f, 0, 0,			xN[0], xN[1], xN[2],	255,255,255,		0.5f, 0.5f };
-	vertices[7] = { v2,						xN,						255,255,255,		1.0f, 1.0f };
-	vertices[8] = { v3,						xN,						255,255,255,		0.0f, 1.0f };
-	vertices[9] = { v1,						xN,						255,255,255,		0.0f, 0.0f };
-	vertices[10] = { v0,					xN,						255,255,255,		1.0f, 0.0f };
-	vertices[11] = { v2,					xN,						255,255,255,		1.0f, 1.0f };
+	vertices[6] = { center1,		xN,		255,255,255,		0.5f, 0.5f };
+	vertices[7] = { v2,				xN,		255,255,255,		1.0f, 1.0f };
+	vertices[8] = { v3,				xN,		255,255,255,		0.0f, 1.0f };
+	vertices[9] = { v1,				xN,		255,255,255,		0.0f, 0.0f };
+	vertices[10] = { v0,			xN,		255,255,255,		1.0f, 0.0f };
+	vertices[11] = { v2,			xN,		255,255,255,		1.0f, 1.0f };
 
-	vertices[12] = { 0, 0, -0.5f,			zN[0], zN[1], zN[2],	255,255,255,		0.5f, 0.5f };
-	vertices[13] = { v6,					zN,						255,255,255,		1.0f, 1.0f };
-	vertices[14] = { v2,					zN,						255,255,255,		0.0f, 1.0f };
-	vertices[15] = { v0,					zN,						255,255,255,		0.0f, 0.0f };
-	vertices[16] = { v4,					zN,						255,255,255,		1.0f, 0.0f };
-	vertices[17] = { v6,					zN,						255,255,255,		1.0f, 1.0f };
+	vertices[12] = { center2,		zN,		255,255,255,		0.5f, 0.5f };
+	vertices[13] = { v6,			zN,		255,255,255,		1.0f, 1.0f };
+	vertices[14] = { v2,			zN,		255,255,255,		0.0f, 1.0f };
+	vertices[15] = { v0,			zN,		255,255,255,		0.0f, 0.0f };
+	vertices[16] = { v4,			zN,		255,255,255,		1.0f, 0.0f };
+	vertices[17] = { v6,			zN,		255,255,255,		1.0f, 1.0f };
 
-	vertices[18] = { 0.5f, 0, 0,			xP[0], xP[1], xP[2],	255,255,255,		0.5f, 0.5f };
-	vertices[19] = { v6,					xP,						255,255,255,		1.0f, 1.0f };
-	vertices[20] = { v7,					xP,						255,255,255,		0.0f, 1.0f };
-	vertices[21] = { v5,					xP,						255,255,255,		0.0f, 0.0f };
-	vertices[22] = { v4,					xP,						255,255,255,		1.0f, 0.0f };
-	vertices[23] = { v6,					xP,						255,255,255,		1.0f, 1.0f };
+	vertices[18] = { center3,		xP,		255,255,255,		0.5f, 0.5f };
+	vertices[19] = { v6,			xP,		255,255,255,		1.0f, 1.0f };
+	vertices[20] = { v7,			xP,		255,255,255,		0.0f, 1.0f };
+	vertices[21] = { v5,			xP,		255,255,255,		0.0f, 0.0f };
+	vertices[22] = { v4,			xP,		255,255,255,		1.0f, 0.0f };
+	vertices[23] = { v6,			xP,		255,255,255,		1.0f, 1.0f };
 
-	vertices[24] = { 0, 0.5f, 0,			yP[0], yP[1], yP[2],	255,255,255,		0.5f, 0.5f };
-	vertices[25] = { v6,					yP,						255,255,255,		1.0f, 1.0f };
-	vertices[26] = { v2,					yP,						255,255,255,		0.0f, 1.0f };
-	vertices[27] = { v3,					yP,						255,255,255,		0.0f, 0.0f };
-	vertices[28] = { v7,					yP,						255,255,255,		1.0f, 0.0f };
-	vertices[29] = { v6,					yP,						255,255,255,		1.0f, 1.0f };
+	vertices[24] = { center4,		yP,		255,255,255,		0.5f, 0.5f };
+	vertices[25] = { v6,			yP,		255,255,255,		1.0f, 1.0f };
+	vertices[26] = { v2,			yP,		255,255,255,		0.0f, 1.0f };
+	vertices[27] = { v3,			yP,		255,255,255,		0.0f, 0.0f };
+	vertices[28] = { v7,			yP,		255,255,255,		1.0f, 0.0f };
+	vertices[29] = { v6,			yP,		255,255,255,		1.0f, 1.0f };
 
-	vertices[30] = { 0, -0.5f, 0,			yN[0], yN[1], yN[2],	255,255,255,		0.5f, 0.5f };
-	vertices[31] = { v4,					yN,						255,255,255,		1.0f, 1.0f };
-	vertices[32] = { v0,					yN,						255,255,255,		0.0f, 1.0f };
-	vertices[33] = { v1,					yN,						255,255,255,		0.0f, 0.0f };
-	vertices[34] = { v5,					yN,						255,255,255,		1.0f, 0.0f };
-	vertices[35] = { v4,					yN,						255,255,255,		1.0f, 1.0f };
+	vertices[30] = { center5,		yN,		255,255,255,		0.5f, 0.5f };
+	vertices[31] = { v4,			yN,		255,255,255,		1.0f, 1.0f };
+	vertices[32] = { v0,			yN,		255,255,255,		0.0f, 1.0f };
+	vertices[33] = { v1,			yN,		255,255,255,		0.0f, 0.0f };
+	vertices[34] = { v5,			yN,		255,255,255,		1.0f, 0.0f };
+	vertices[35] = { v4,			yN,		255,255,255,		1.0f, 1.0f };
 
 	std::vector<Vertex> sphereVertices;
 	std::vector<int> sphereIndices;
 	float sphereColor[3] = { 255, 255, 255 };
 
-	std::vector<Vertex>sphereLightVertices;
-	std::vector<int> sphereLightIndices;
-	float sphereLightColor[3] = { 255, 255, 255 };
-
 	GenerateSphereVertices(sphereVertices, sphereIndices, 1.0f, 36, 18, sphereColor);
-
-	GenerateSphereVertices(sphereLightVertices, sphereLightIndices, 1.0f, 36, 18, sphereLightColor);
 
 	// Create a vertex buffer object (VBO), and upload our vertices data to the VBO
 	GLuint vbo1, vbo2;
@@ -557,12 +558,12 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	std::vector<std::string> faces{
-		"px.jpg",
-		"nx.jpg",
-		"py.jpg",
-		"pz.jpg",
-		"ny.jpg",
-		"nz.jpg"
+		"px.png",
+		"nx.png",
+		"py.png",
+		"ny.png",
+		"pz.png",
+		"nz.png"
 	};
 
 	unsigned int cubemapTexture = LoadCubeMap(faces);
@@ -951,6 +952,7 @@ int main()
 		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 
+		// Skybox rendering
 		glBindVertexArray(0);
 		glDepthFunc(GL_LEQUAL);
 		glUseProgram(skyboxShader);
@@ -973,6 +975,7 @@ int main()
 		glDrawArrays(GL_TRIANGLE_FAN, 24, 6);
 		glDrawArrays(GL_TRIANGLE_FAN, 30, 6);
 		glBindVertexArray(0);
+		glDepthFunc(GL_LESS);
 
 		// Movement
 		glfwGetCursorPos(window, &xMousePos, &yMousePos);

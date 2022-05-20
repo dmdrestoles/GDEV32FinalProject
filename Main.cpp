@@ -340,6 +340,35 @@ void GenerateSphereVertices(std::vector<Vertex>& vertices, std::vector<int>& ind
 	}
 }
 
+unsigned int LoadCubeMap(std::vector<std::string> faces) {
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+
+	int width, height, nrChannels;
+	for (unsigned int i = 0; i < faces.size(); i++)
+	{
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+		if (data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			stbi_image_free(data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+			stbi_image_free(data);
+		}
+	}
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	return textureID;
+}
+
 /**
  * @brief Main function
  * @return An integer indicating whether the program ended successfully or not.
@@ -388,6 +417,69 @@ int main()
 		return 1;
 	}
 
+	// --- Vertex specification ---
+	float v0[3] = { -0.5f, -0.5f, -0.5f };
+	float v1[3] = { -0.5f, -0.5f, 0.5f };
+	float v2[3] = { -0.5f, 0.5f, -0.5f };
+	float v3[3] = { -0.5f, 0.5f, 0.5f };
+	float v4[3] = { 0.5f, -0.5f, -0.5f };
+	float v5[3] = { 0.5f, -0.5f, 0.5f };
+	float v6[3] = { 0.5f, 0.5f, -0.5f };
+	float v7[3] = { 0.5f, 0.5f, 0.5f };
+
+	float xP[3] = { 1.0f, 0.0f, 0.0f };
+	float xN[3] = { -1.0f, 0.0f, 0.0f };
+	float yP[3] = { 0.0f, 1.0f, 0.0f };
+	float yN[3] = { 0.0f, -1.0f, 0.0f };
+	float zP[3] = { 0.0f, 0.0f, 1.0f };
+	float zN[3] = { 0.0f, 0.0f, -1.0f };
+
+	// Set up the data for each vertex of the quad
+	// These vertices are in LOCAL SPACE
+	Vertex vertices[36];
+	// Position				// Normals				// Color				// UV
+	vertices[0] = { 0, 0, 0.5f,				zP[0], zP[1], zP[2],	255,255,255,		0.5f, 0.5f };
+	vertices[1] = { v7,						zP,						255,255,255,		1.0f, 1.0f };
+	vertices[2] = { v3,						zP,						255,255,255,		0.0f, 1.0f };
+	vertices[3] = { v1,						zP,						255,255,255,		0.0f, 0.0f };
+	vertices[4] = { v5,						zP,						255,255,255,		1.0f, 0.0f };
+	vertices[5] = { v7,						zP,						255,255,255,		1.0f, 1.0f };
+
+	vertices[6] = { -0.5f, 0, 0,			xN[0], xN[1], xN[2],	255,255,255,		0.5f, 0.5f };
+	vertices[7] = { v2,						xN,						255,255,255,		1.0f, 1.0f };
+	vertices[8] = { v3,						xN,						255,255,255,		0.0f, 1.0f };
+	vertices[9] = { v1,						xN,						255,255,255,		0.0f, 0.0f };
+	vertices[10] = { v0,					xN,						255,255,255,		1.0f, 0.0f };
+	vertices[11] = { v2,					xN,						255,255,255,		1.0f, 1.0f };
+
+	vertices[12] = { 0, 0, -0.5f,			zN[0], zN[1], zN[2],	255,255,255,		0.5f, 0.5f };
+	vertices[13] = { v6,					zN,						255,255,255,		1.0f, 1.0f };
+	vertices[14] = { v2,					zN,						255,255,255,		0.0f, 1.0f };
+	vertices[15] = { v0,					zN,						255,255,255,		0.0f, 0.0f };
+	vertices[16] = { v4,					zN,						255,255,255,		1.0f, 0.0f };
+	vertices[17] = { v6,					zN,						255,255,255,		1.0f, 1.0f };
+
+	vertices[18] = { 0.5f, 0, 0,			xP[0], xP[1], xP[2],	255,255,255,		0.5f, 0.5f };
+	vertices[19] = { v6,					xP,						255,255,255,		1.0f, 1.0f };
+	vertices[20] = { v7,					xP,						255,255,255,		0.0f, 1.0f };
+	vertices[21] = { v5,					xP,						255,255,255,		0.0f, 0.0f };
+	vertices[22] = { v4,					xP,						255,255,255,		1.0f, 0.0f };
+	vertices[23] = { v6,					xP,						255,255,255,		1.0f, 1.0f };
+
+	vertices[24] = { 0, 0.5f, 0,			yP[0], yP[1], yP[2],	255,255,255,		0.5f, 0.5f };
+	vertices[25] = { v6,					yP,						255,255,255,		1.0f, 1.0f };
+	vertices[26] = { v2,					yP,						255,255,255,		0.0f, 1.0f };
+	vertices[27] = { v3,					yP,						255,255,255,		0.0f, 0.0f };
+	vertices[28] = { v7,					yP,						255,255,255,		1.0f, 0.0f };
+	vertices[29] = { v6,					yP,						255,255,255,		1.0f, 1.0f };
+
+	vertices[30] = { 0, -0.5f, 0,			yN[0], yN[1], yN[2],	255,255,255,		0.5f, 0.5f };
+	vertices[31] = { v4,					yN,						255,255,255,		1.0f, 1.0f };
+	vertices[32] = { v0,					yN,						255,255,255,		0.0f, 1.0f };
+	vertices[33] = { v1,					yN,						255,255,255,		0.0f, 0.0f };
+	vertices[34] = { v5,					yN,						255,255,255,		1.0f, 0.0f };
+	vertices[35] = { v4,					yN,						255,255,255,		1.0f, 1.0f };
+
 	std::vector<Vertex> sphereVertices;
 	std::vector<int> sphereIndices;
 	float sphereColor[3] = { 255, 255, 255 };
@@ -401,33 +493,30 @@ int main()
 	GenerateSphereVertices(sphereLightVertices, sphereLightIndices, 1.0f, 36, 18, sphereLightColor);
 
 	// Create a vertex buffer object (VBO), and upload our vertices data to the VBO
-	GLuint vbo2;
+	GLuint vbo1, vbo2;
+	glGenBuffers(1, &vbo1);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo1);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glGenBuffers(1, &vbo2);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo2);
 	glBufferData(GL_ARRAY_BUFFER, sphereVertices.size() * sizeof(Vertex), sphereVertices.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	GLuint lightVBO;
-	glGenBuffers(1, &lightVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-	glBufferData(GL_ARRAY_BUFFER, sphereLightVertices.size() * sizeof(Vertex), sphereLightVertices.data(), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	GLuint ibo, lightIbo;
+	GLuint ibo;
 	glGenBuffers(1, &ibo);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereIndices.size() * sizeof(int), sphereIndices.data(), GL_STATIC_DRAW);
 
-	glGenBuffers(1, &lightIbo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lightIbo);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphereLightIndices.size() * sizeof(int), sphereLightIndices.data(), GL_STATIC_DRAW);
+	// Create a vertex array object that contains data on how to map vertex attributes
+	// (e.g., position, color) to vertex shader properties.
+	GLuint vao1, vao2;
+	glGenVertexArrays(1, &vao1);
+	glBindVertexArray(vao1);
 
-	GLuint lightVAO;
-	glGenVertexArrays(1, &lightVAO);
-	glBindVertexArray(lightVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, lightVBO);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo1);
+
 	// Vertex attribute 0 - Position
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
@@ -443,10 +532,6 @@ int main()
 	// Vertex attribute 3 - UV-coordinates
 	glEnableVertexAttribArray(3);
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, u)));
-
-	// Create a vertex array object that contains data on how to map vertex attributes
-	// (e.g., position, color) to vertex shader properties.
-	GLuint vao2;
 	
 	glGenVertexArrays(1, &vao2);
 	glBindVertexArray(vao2);
@@ -471,6 +556,16 @@ int main()
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	std::vector<std::string> faces{
+		"px.jpg",
+		"nx.jpg",
+		"py.jpg",
+		"pz.jpg",
+		"ny.jpg",
+		"nz.jpg"
+	};
+
+	unsigned int cubemapTexture = LoadCubeMap(faces);
 	// Create a variable that will contain the ID of our first texture (eye.jpg),
 	// and use glGenTextures() to generate the texture itself
 	GLuint tex0;
@@ -523,6 +618,7 @@ int main()
 
 	// Create a shader program
 	GLuint program = CreateShaderProgram("main.vsh", "main.fsh");
+	GLuint skyboxShader = CreateShaderProgram("skybox.vsh", "skybox.fsh");
 
 	// Tell OpenGL the dimensions of the region where stuff will be drawn.
 	// For now, tell OpenGL to use the whole screen
@@ -671,7 +767,7 @@ int main()
 
 		glm::mat4 sphereTransforms(1.0f);
 		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransforms));
-		glDrawElements(GL_TRIANGLES, sphereLightIndices.size(), GL_UNSIGNED_INT, (void*)0);
+		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 		
 		float x1, z1;
 		// Declaration of elliptical constants
@@ -855,11 +951,34 @@ int main()
 		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 
+		glBindVertexArray(0);
+		glDepthFunc(GL_LEQUAL);
+		glUseProgram(skyboxShader);
+
+		glm::mat4 skyboxView = glm::mat4(glm::mat3(lookAtMatrix));
+
+		GLint skyboxViewMatrixUniform = glGetUniformLocation(skyboxShader, "viewMatrix");
+		glUniformMatrix4fv(skyboxViewMatrixUniform, 1, GL_FALSE, glm::value_ptr(skyboxView));
+
+		GLint skyboxProjectionMatrixUniform = glGetUniformLocation(skyboxShader, "projectionMatrix");
+		glUniformMatrix4fv(skyboxProjectionMatrixUniform, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+		glBindVertexArray(vao1);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 6, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 12, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 18, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 24, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 30, 6);
+		glBindVertexArray(0);
+
 		// Movement
 		glfwGetCursorPos(window, &xMousePos, &yMousePos);
 		ProcessMovement(window, eye, target, up, moveSpeed);
 		ProcessRevolutionSpeed(window, revolutionSpeed);
-		std::cout << "Revolution speed:" << revolutionSpeed << std::endl;
+		//std::cout << "Revolution speed:" << revolutionSpeed << std::endl;
 		glfwSetCursorPosCallback(window, ProcessMouse);
 
 		// "Unuse" the vertex array object
@@ -876,13 +995,17 @@ int main()
 
 	// Make sure to delete the shader program
 	glDeleteProgram(program);
+	glDeleteProgram(skyboxShader);
 
 	// Delete the VBO that contains our vertices
 	glDeleteBuffers(1, &vbo2);
+	glDeleteBuffers(1, &vbo1);
 
 	// Delete the vertex array object
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glDeleteVertexArrays(1, &vbo1);
+	glDeleteVertexArrays(1, &vbo2);
 
 	// Delete our textures
 	glDeleteTextures(1, &tex0);

@@ -159,7 +159,7 @@ struct Planet {
 	}
 };
 
-float moveConstant = 2.0f;
+float moveConstant = 10.0f;
 const float PI = acos(-1);
 
 void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm::vec3& up, float moveSpeed)
@@ -192,12 +192,12 @@ void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm:
 
 	if (shiftKey == GLFW_PRESS)
 	{
-		moveConstant = 4.0f;
+		moveConstant = 20.0f;
 	}
 
 	if (shiftKey == GLFW_RELEASE)
 	{
-		moveConstant = 2.0f;
+		moveConstant = 10.0f;
 	}
 }
 
@@ -351,7 +351,7 @@ unsigned int LoadCubeMap(std::vector<std::string> faces) {
 		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 			stbi_image_free(data);
 		}
 		else
@@ -652,8 +652,45 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		// Clear the colors and depth values (since we enabled depth testing) in our off-screen framebuffer
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glm::mat4 viewMatrix(1.0f);
+		viewMatrix = glm::translate(viewMatrix, -cameraPosition); // Note the negative translation
+		glm::mat4 lookAtMatrix = glm::lookAt(eye, eye + target, up);
 
+		// Construct our view frustrum (projection matrix) using the following parameters
+		float fieldOfViewY = glm::radians(60.0f); // Field of view
+		float aspectRatio = windowWidth * 1.0f / windowHeight; // Aspect ratio, which is the ratio between width and height
+		float nearPlane = 0.1f; // Near plane, minimum distance from the camera where things will be rendered
+		float farPlane = 500.0f; // Far plane, maximum distance from the camera where things will be rendered
+		glm::mat4 projectionMatrix = glm::perspective(fieldOfViewY, aspectRatio, nearPlane, farPlane);
+
+		// Skybox rendering
+		glDepthMask(GL_FALSE);
+		//glDepthFunc(GL_LEQUAL);
+		glUseProgram(skyboxShader);
+
+		glm::mat4 skyboxView = glm::mat4(glm::mat3(lookAtMatrix));
+
+		GLint skyboxViewMatrixUniform = glGetUniformLocation(skyboxShader, "viewMatrix");
+		glUniformMatrix4fv(skyboxViewMatrixUniform, 1, GL_FALSE, glm::value_ptr(skyboxView));
+
+		GLint skyboxProjectionMatrixUniform = glGetUniformLocation(skyboxShader, "projectionMatrix");
+		glUniformMatrix4fv(skyboxProjectionMatrixUniform, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+
+		glBindVertexArray(vao1);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 6, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 12, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 18, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 24, 6);
+		glDrawArrays(GL_TRIANGLE_FAN, 30, 6);
+		glDepthMask(GL_TRUE);
+		glBindVertexArray(0);
+		//glDepthFunc(GL_LESS);
+		// 
 		// Use the shader program that we created
 		glUseProgram(program);
 
@@ -666,10 +703,6 @@ int main()
 		// Let's say we want to position our camera to be at (2, 1, 4) and looking down at the origin (0, 0, 0).
 		// For the position, remember that having our camera at (2, 1, 4) is the same as moving the entire world in the opposite direction (-2, -1, -4)
 		// As for the orientation of the camera, we can use the lookAt function, which glm kindly provides us
-
-		glm::mat4 viewMatrix(1.0f);
-		viewMatrix = glm::translate(viewMatrix, -cameraPosition); // Note the negative translation
-		glm::mat4 lookAtMatrix = glm::lookAt(eye, eye + target, up);
 
 		viewMatrix = lookAtMatrix * modelMatrix;
 		GLint viewMatrixUniform = glGetUniformLocation(program, "viewMatrix");
@@ -733,11 +766,11 @@ int main()
 		spotlightUniform = glGetUniformLocation(program, "spotlight.direction");
 		glUniform3fv(spotlightUniform, 1, glm::value_ptr(target));
 
-		float spotlightCutoff = glm::cos(glm::radians(15.0f));
+		float spotlightCutoff = glm::cos(glm::radians(2.0f));
 		spotlightUniform = glGetUniformLocation(program, "spotlight.cutoff");
 		glUniform1f(spotlightUniform, spotlightCutoff);
 		
-		float spotlightOutercutoff = glm::cos(glm::radians(17.5f));
+		float spotlightOutercutoff = glm::cos(glm::radians(3.0f));
 		spotlightUniform = glGetUniformLocation(program, "spotlight.outerCutoff");
 		glUniform1f(spotlightUniform, spotlightOutercutoff);
 
@@ -748,13 +781,6 @@ int main()
 		glUniform3fv(plAttenuationUniform, 1, glm::value_ptr(pointLightAttenuation));
 
 		// END: Lighting
-		
-		// Construct our view frustrum (projection matrix) using the following parameters
-		float fieldOfViewY = glm::radians(60.0f); // Field of view
-		float aspectRatio = windowWidth * 1.0f / windowHeight; // Aspect ratio, which is the ratio between width and height
-		float nearPlane = 0.1f; // Near plane, minimum distance from the camera where things will be rendered
-		float farPlane = 500.0f; // Far plane, maximum distance from the camera where things will be rendered
-		glm::mat4 projectionMatrix = glm::perspective(fieldOfViewY, aspectRatio, nearPlane, farPlane);
 
 		GLint projectionMatrixUniform = glGetUniformLocation(program, "projectionMatrix");
 		glUniformMatrix4fv(projectionMatrixUniform, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
@@ -769,6 +795,13 @@ int main()
 		glm::mat4 sphereTransforms(1.0f);
 		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransforms));
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+
+		GLint texUniform = glGetUniformLocation(program, "tex");
+		glUniform1i(texUniform, 0);
+
+		// Bind our pepe.jpg texture to texture unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex0);
 		
 		float x1, z1;
 		// Declaration of elliptical constants
@@ -952,30 +985,7 @@ int main()
 		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
 		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 
-		// Skybox rendering
 		glBindVertexArray(0);
-		glDepthFunc(GL_LEQUAL);
-		glUseProgram(skyboxShader);
-
-		glm::mat4 skyboxView = glm::mat4(glm::mat3(lookAtMatrix));
-
-		GLint skyboxViewMatrixUniform = glGetUniformLocation(skyboxShader, "viewMatrix");
-		glUniformMatrix4fv(skyboxViewMatrixUniform, 1, GL_FALSE, glm::value_ptr(skyboxView));
-
-		GLint skyboxProjectionMatrixUniform = glGetUniformLocation(skyboxShader, "projectionMatrix");
-		glUniformMatrix4fv(skyboxProjectionMatrixUniform, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-
-		glBindVertexArray(vao1);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
-		glDrawArrays(GL_TRIANGLE_FAN, 6, 6);
-		glDrawArrays(GL_TRIANGLE_FAN, 12, 6);
-		glDrawArrays(GL_TRIANGLE_FAN, 18, 6);
-		glDrawArrays(GL_TRIANGLE_FAN, 24, 6);
-		glDrawArrays(GL_TRIANGLE_FAN, 30, 6);
-		glBindVertexArray(0);
-		glDepthFunc(GL_LESS);
 
 		// Movement
 		glfwGetCursorPos(window, &xMousePos, &yMousePos);

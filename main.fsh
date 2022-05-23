@@ -35,31 +35,6 @@ struct PointLight
 	vec3 attenuation;
 };
 
-struct DirectionalLight
-{
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
-	vec3 direction;
-	vec3 objectSpecular;
-	int shininess;
-};
-
-// Spotlight struct
-struct Spotlight
-{
-	vec3 ambient;
-	vec3 diffuse;
-	vec3 specular;
-	vec3 position;
-	vec3 direction;
-	float cutoff;
-	float outerCutoff;
-	vec3 objectSpecular;
-	int shininess;
-	vec3 attenuation;
-};
-
 struct Ambience
 {
 	vec3 color;
@@ -97,8 +72,6 @@ struct Specular
 
 uniform vec3 eye;
 uniform PointLight ptLight;
-uniform DirectionalLight dirLight;
-uniform Spotlight spotlight;
 
 float ComputeAttenuation(vec3 position, vec3 fragPos, vec3 attenuation)
 {
@@ -115,26 +88,11 @@ vec3 ComputeAmbience(Ambience ambience)
 	return compAmb;
 }
 
-vec3 ComputeDirAmbience(Ambience ambience)
-{
-	vec3 compAmb = ambience.strength * ambience.color;
-	return compAmb;
-}
-
 vec3 ComputeDiffuse(Diffuse diffuse)
 {
 	vec3 norm = normalize(diffuse.normal);
 	vec3 lightDir = normalize(diffuse.lightPos - diffuse.fragPos);
 	float diff = max(dot(norm, lightDir), 0.0f);
-	vec3 compDiff = diff * diffuse.color;
-	
-	return compDiff;
-}
-
-vec3 ComputeDirDiffuse(Diffuse diffuse)
-{
-	vec3 norm = normalize(diffuse.normal);
-	float diff = max(dot(norm, normalize(diffuse.direction)), 0.0f);
 	vec3 compDiff = diff * diffuse.color;
 	
 	return compDiff;
@@ -150,27 +108,9 @@ vec3 ComputeSpecular(Specular specular)
 
 	return compSpec;
 }
-
-vec3 ComputeDirSpecular(Specular specular)
-{
-	vec3 viewDir = normalize(specular.viewPos - specular.fragPos);
-	vec3 reflectDir = reflect(-normalize(specular.direction), specular.normal);
-	float dirSpec = pow(max(dot(viewDir, reflectDir), 0.0f), specular.shininess);
-	vec3 compSpec = dirSpec * specular.objectSpecular * specular.color;
-
-	return compSpec;
-}
-
-float ComputeSpotlightClamp(Spotlight spotlight, float theta)
-{
-	float epsilon = spotlight.cutoff - spotlight.outerCutoff;
-	float intensity = clamp( (theta - spotlight.outerCutoff) / epsilon, 0.0, 1.0 );
-
-	return intensity;
-}
-Ambience plAmbience, dlAmbience, spAmbience;
-Diffuse plDiffuse, dlDiffuse, spDiffuse;
-Specular plSpecular, dlSpecular, spSpecular;
+Ambience plAmbience;
+Diffuse plDiffuse;
+Specular plSpecular;
 
 void main()
 {
@@ -202,72 +142,8 @@ void main()
 	plAmbience.ambience = ptLightAttenuationFactor * ComputeAmbience(plAmbience);
 	plDiffuse.diffuse = ptLightAttenuationFactor * ComputeDiffuse(plDiffuse);
 	plSpecular.specular = ptLightAttenuationFactor * ComputeSpecular(plSpecular);
-	
-	/*
-	// Directional light
-	dlAmbience.color = dirLight.ambient;
-	dlAmbience.strength = 0.9f;
 
-	dlDiffuse.color = dirLight.diffuse;
-	dlDiffuse.normal = outNormal;
-	dlDiffuse.fragPos = outPos;
-	dlDiffuse.direction = dirLight.direction;
-	
-	dlSpecular.color = dirLight.specular;
-	dlSpecular.shininess = dirLight.shininess;
-	dlSpecular.normal = outNormal;
-	dlSpecular.fragPos = outPos;
-	dlSpecular.direction = dirLight.direction;
-	dlSpecular.viewPos = eye;
-	dlSpecular.objectSpecular = dirLight.objectSpecular;
-	
-	float dirLightAttenuationFactor = 1.0f;
-
-	dlAmbience.ambience = ComputeDirAmbience(dlAmbience);
-	dlDiffuse.diffuse = ComputeDirDiffuse(dlDiffuse);
-	dlSpecular.specular = ComputeDirSpecular(dlSpecular);
-	*/
-	// Spotlight
-	spAmbience.color = spotlight.ambient;
-	spAmbience.strength = 0.9f;
-
-	spDiffuse.color = spotlight.diffuse;
-	spDiffuse.normal = outNormal;
-	spDiffuse.fragPos = outPos;
-	spDiffuse.lightPos = eye;
-	spDiffuse.attenuation = spotlight.attenuation;
-
-	spSpecular.color = spotlight.specular;
-	spSpecular.shininess = spotlight.shininess;
-	spSpecular.normal = outNormal; 
-	spSpecular.fragPos = outPos; 
-	spSpecular.lightPos = eye;
-	spSpecular.viewPos = eye;
-	spSpecular.objectSpecular = spotlight.objectSpecular;
-	
-	vec3 lightDir = normalize(spotlight.position - outPos);
-	float theta = dot(lightDir, normalize(-spotlight.direction));
-	float intensity = ComputeSpotlightClamp(spotlight, theta);
-
-	float spotLightAttenuationFactor = ComputeAttenuation(spotlight.position, outPos, spotlight.attenuation);
-
-	spAmbience.ambience = spotLightAttenuationFactor * ComputeAmbience(spAmbience);
-	spDiffuse.diffuse = vec3(0.0f, 0.0f, 0.0f);
-	spSpecular.specular = vec3(0.0f, 0.0f, 0.0f);
-
-	if ( theta > spotlight.cutoff )
-	{
-		spDiffuse.diffuse = spotLightAttenuationFactor * ComputeDiffuse(spDiffuse);
-		spSpecular.specular = spotLightAttenuationFactor * ComputeSpecular(spSpecular);
-	}
-
-	spDiffuse.diffuse *= intensity;
-	spSpecular.specular *= intensity;
-
-	vec3 averageAmbience = (plAmbience.ambience + spAmbience.ambience) / 3.0f;
-
-	vec3 finalLightColor = (averageAmbience + ((plDiffuse.diffuse + spDiffuse.diffuse) + (plSpecular.specular + spSpecular.specular))) * outColor;
-	//vec3 finalLightColor = (plAmbience.ambience + plDiffuse.diffuse + plSpecular.specular) * outColor;
+	vec3 finalLightColor = (plAmbience.ambience + plDiffuse.diffuse + plSpecular.specular) * outColor;
 	vec4 processedLight = vec4(finalLightColor, 1.0f);
 	vec4 sampledColor = texture(tex, outUV);
 

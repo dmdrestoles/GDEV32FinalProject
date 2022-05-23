@@ -246,6 +246,7 @@ void ProcessMouse(GLFWwindow* window, double xpos, double ypos)
 }
 
 float revolutionSpeed = 1.f;
+const float distScale = 1.f;
 void ProcessRevolutionSpeed(GLFWwindow* window, float& revolutionSpeed) {
 	int upKey = glfwGetKey(window, GLFW_KEY_UP);
 	int downKey = glfwGetKey(window, GLFW_KEY_DOWN);
@@ -369,6 +370,105 @@ unsigned int LoadCubeMap(std::vector<std::string> faces) {
 	return textureID;
 }
 
+std::vector<Planet> planets;
+void SetPlanetInfo() {
+	Planet mercury;
+	mercury.radius = 0.244f;
+	mercury.majorAxis = 5.7f * distScale;
+	mercury.eccentricity = 0.205f;
+	mercury.ComputeMinorAxis();
+	mercury.speed = 4.15f * revolutionSpeed;
+	mercury.cx = 0.f;
+	mercury.cy = 0.f;
+	mercury.cz = 0.f;
+	mercury.angle = 0.0f;
+
+	Planet venus;
+	venus.radius = 0.6502f;
+	venus.majorAxis = 10.8f * distScale;
+	venus.eccentricity = 0.007;
+	venus.ComputeMinorAxis();
+	venus.speed = 1.62 * revolutionSpeed;
+	venus.cx = 0.f;
+	venus.cy = 0.f;
+	venus.cz = 0.f;
+	venus.angle = 0.f;
+	
+	Planet earth;
+	earth.radius = 0.6371f;
+	earth.majorAxis = 14.9f * distScale;
+	earth.eccentricity = 0.017;
+	earth.ComputeMinorAxis();
+	earth.speed = 1 * revolutionSpeed;
+	earth.cx = 0.f;
+	earth.cy = 0.f;
+	earth.cz = 0.f;
+	earth.angle = 0.f;
+
+	Planet mars;
+	mars.radius = 0.339f;
+	mars.majorAxis = 22.8f * distScale;
+	mars.eccentricity = 0.093;
+	mars.ComputeMinorAxis();
+	mars.speed = 0.53f * revolutionSpeed;
+	mars.cx = 0.f;
+	mars.cy = 0.f;
+	mars.cz = 0.f;
+	mars.angle = 0.f;
+
+	Planet jupiter;
+	jupiter.radius = 6.991f;
+	jupiter.majorAxis = 89.f * distScale;
+	jupiter.eccentricity = 0.084;
+	jupiter.ComputeMinorAxis();
+	jupiter.speed = 0.08f * revolutionSpeed;
+	jupiter.cx = 0.f;
+	jupiter.cy = 0.f;
+	jupiter.cz = 0.f;
+	jupiter.angle = 0.f;
+
+	Planet saturn;
+	saturn.radius = 5.8232f;
+	saturn.majorAxis = 143.7f * distScale;
+	saturn.eccentricity = 0.054f;
+	saturn.ComputeMinorAxis();
+	saturn.speed = 0.03f * revolutionSpeed;
+	saturn.cx = 0.f;
+	saturn.cy = 0.f;
+	saturn.cz = 0.f;
+	saturn.angle = 0.f;
+
+	Planet uranus;
+	uranus.radius = 2.5362f;
+	uranus.majorAxis = 287.1f * distScale;
+	uranus.eccentricity = 0.047f;
+	uranus.ComputeMinorAxis();
+	uranus.speed = 0.0119f * revolutionSpeed;
+	uranus.cx = 0.f;
+	uranus.cy = 0.f;
+	uranus.cz = 0.f;
+	uranus.angle = 0.f;
+
+	Planet neptune;
+	neptune.radius = 2.4622f;
+	neptune.majorAxis = 453.0f * distScale;
+	neptune.eccentricity = 0.008f;
+	neptune.ComputeMinorAxis();
+	neptune.speed = 0.0061f * revolutionSpeed;
+	neptune.cx = 0.f;
+	neptune.cy = 0.f;
+	neptune.cz = 0.f;
+	neptune.angle = 0.f;
+
+	planets.push_back(mercury);
+	planets.push_back(venus);
+	planets.push_back(earth);
+	planets.push_back(mars);
+	planets.push_back(jupiter);
+	planets.push_back(saturn);
+	planets.push_back(uranus);
+	planets.push_back(neptune);
+}
 /**
  * @brief Main function
  * @return An integer indicating whether the program ended successfully or not.
@@ -647,6 +747,7 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glm::mat4 modelMatrix(1.0f);
+	SetPlanetInfo();
 
 	// Render loop
 	while (!glfwWindowShouldClose(window))
@@ -749,37 +850,6 @@ int main()
 		glm::vec3 pointLightAttenuation = glm::vec3(0.0f, 0.f, 1.0f);
 		GLint plAttenuationUniform = glGetUniformLocation(program, "ptLight.attenuation");
 		glUniform3fv(plAttenuationUniform, 1, glm::value_ptr(pointLightAttenuation));
-		
-		glm::vec3 spotlightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-		GLint spotlightColorUniform = glGetUniformLocation(program, "spotlight.ambient");
-		glUniform3fv(spotlightColorUniform, 1, glm::value_ptr(spotlightColor));
-		spotlightColorUniform = glGetUniformLocation(program, "spotlight.diffuse");
-		glUniform3fv(spotlightColorUniform, 1, glm::value_ptr(spotlightColor));
-		spotlightColorUniform = glGetUniformLocation(program, "spotlight.specular");
-		glUniform3fv(spotlightColorUniform, 1, glm::value_ptr(spotlightColor));
-		spotlightColorUniform = glGetUniformLocation(program, "spotlight.objectSpecular");
-		glUniform3fv(spotlightColorUniform, 1, glm::value_ptr(spotlightColor));
-
-		GLint spotlightUniform = glGetUniformLocation(program, "spotlight.position");
-		glUniform3fv(spotlightUniform, 1, glm::value_ptr(eye));
-
-		spotlightUniform = glGetUniformLocation(program, "spotlight.direction");
-		glUniform3fv(spotlightUniform, 1, glm::value_ptr(target));
-
-		float spotlightCutoff = glm::cos(glm::radians(2.0f));
-		spotlightUniform = glGetUniformLocation(program, "spotlight.cutoff");
-		glUniform1f(spotlightUniform, spotlightCutoff);
-		
-		float spotlightOutercutoff = glm::cos(glm::radians(3.0f));
-		spotlightUniform = glGetUniformLocation(program, "spotlight.outerCutoff");
-		glUniform1f(spotlightUniform, spotlightOutercutoff);
-
-		GLint spotlightShininessUniform = glGetUniformLocation(program, "spotlight.shininess");
-		glUniform1i(spotlightShininessUniform, objectShininess);
-		
-		plAttenuationUniform = glGetUniformLocation(program, "spotlight.attenuation");
-		glUniform3fv(plAttenuationUniform, 1, glm::value_ptr(pointLightAttenuation));
-
 		// END: Lighting
 
 		GLint projectionMatrixUniform = glGetUniformLocation(program, "projectionMatrix");
@@ -799,191 +869,24 @@ int main()
 		GLint texUniform = glGetUniformLocation(program, "tex");
 		glUniform1i(texUniform, 0);
 
-		// Bind our pepe.jpg texture to texture unit 0
+		// Bind our blank.jpg texture to texture unit 0
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex0);
 		
 		float x1, z1;
 		// Declaration of elliptical constants
-		Planet currentPlanet;
-		const float distScale = 1.f;
-		glm::mat4 sphereTransform2 = glm::mat4(1.0f);
 
-		Planet mercury;
-		mercury.radius = 0.244f;
-		mercury.majorAxis = 5.7f * distScale;
-		mercury.eccentricity = 0.205f;
-		mercury.ComputeMinorAxis();
-		mercury.speed = 4.15f * revolutionSpeed;
-		mercury.cx = 0.f;
-		mercury.cy = 0.f;
-		mercury.cz = 0.f;
-		mercury.angle = 0.0f;
+		for (auto currentPlanet : planets) {
+			glm::mat4 sphereTransform2 = glm::mat4(1.0f);
+			x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
+			z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
 
-		currentPlanet = mercury;
-
-		x1 = currentPlanet.majorAxis * glm::cos( glm::radians((float)glfwGetTime() * currentPlanet.speed) );
-		z1 = currentPlanet.minorAxis * glm::sin( glm::radians((float)glfwGetTime() * currentPlanet.speed) );
-
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		Planet venus;
-		venus.radius = 0.6502f;
-		venus.majorAxis = 10.8f * distScale;
-		venus.eccentricity = 0.007;
-		venus.ComputeMinorAxis();
-		venus.speed = 1.62 * revolutionSpeed;
-		venus.cx = 0.f;
-		venus.cy = 0.f;
-		venus.cz = 0.f;
-		venus.angle = 0.f;
-
-		currentPlanet = venus;
-		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-
-		sphereTransform2 = glm::mat4(1.0f);
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		Planet earth;
-		earth.radius = 0.6371f;
-		earth.majorAxis = 14.9f * distScale;
-		earth.eccentricity = 0.017;
-		earth.ComputeMinorAxis();
-		earth.speed = 1 * revolutionSpeed;
-		earth.cx = 0.f;
-		earth.cy = 0.f;
-		earth.cz = 0.f;
-		earth.angle = 0.f;
-
-		currentPlanet = earth;
-		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-
-		sphereTransform2 = glm::mat4(1.0f);
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		Planet mars;
-		mars.radius = 0.339f;
-		mars.majorAxis = 22.8f * distScale;
-		mars.eccentricity = 0.093;
-		mars.ComputeMinorAxis();
-		mars.speed = 0.53f * revolutionSpeed;
-		mars.cx = 0.f;
-		mars.cy = 0.f;
-		mars.cz = 0.f;
-		mars.angle = 0.f;
-
-		currentPlanet = mars;
-		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-
-		sphereTransform2 = glm::mat4(1.0f);
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		Planet jupiter;
-		jupiter.radius = 6.991f;
-		jupiter.majorAxis = 89.f * distScale;
-		jupiter.eccentricity = 0.084;
-		jupiter.ComputeMinorAxis();
-		jupiter.speed = 0.08f * revolutionSpeed;
-		jupiter.cx = 0.f;
-		jupiter.cy = 0.f;
-		jupiter.cz = 0.f;
-		jupiter.angle = 0.f;
-
-		currentPlanet = jupiter;
-		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-
-		sphereTransform2 = glm::mat4(1.0f);
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		Planet saturn;
-		saturn.radius = 5.8232f;
-		saturn.majorAxis = 143.7f * distScale;
-		saturn.eccentricity = 0.054f;
-		saturn.ComputeMinorAxis();
-		saturn.speed = 0.03f * revolutionSpeed;
-		saturn.cx = 0.f;
-		saturn.cy = 0.f;
-		saturn.cz = 0.f;
-		saturn.angle = 0.f;
-
-		currentPlanet = saturn;
-		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-
-		sphereTransform2 = glm::mat4(1.0f);
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		Planet uranus;
-		uranus.radius = 2.5362f;
-		uranus.majorAxis = 287.1f * distScale;
-		uranus.eccentricity = 0.047f;
-		uranus.ComputeMinorAxis();
-		uranus.speed = 0.0119f * revolutionSpeed;
-		uranus.cx = 0.f;
-		uranus.cy = 0.f;
-		uranus.cz = 0.f;
-		uranus.angle = 0.f;
-
-		currentPlanet = uranus;
-		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-
-		sphereTransform2 = glm::mat4(1.0f);
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		Planet neptune;
-		neptune.radius = 2.4622f;
-		neptune.majorAxis = 453.0f * distScale;
-		neptune.eccentricity = 0.008f;
-		neptune.ComputeMinorAxis();
-		neptune.speed = 0.0061f * revolutionSpeed;
-		neptune.cx = 0.f;
-		neptune.cy = 0.f;
-		neptune.cz = 0.f;
-		neptune.angle = 0.f;
-
-		currentPlanet = uranus;
-		x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-		z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed));
-
-		sphereTransform2 = glm::mat4(1.0f);
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-		sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-		sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
+			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
+			sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
+			glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
+			glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+		}
 
 		glBindVertexArray(0);
 

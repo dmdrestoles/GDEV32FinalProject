@@ -201,7 +201,7 @@ struct Planet {
 	}
 };
 
-float moveConstant = 10.0f;
+float moveConstant = 50.0f;
 const float PI = acos(-1);
 
 void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm::vec3& up, float moveSpeed)
@@ -234,12 +234,12 @@ void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm:
 
 	if (shiftKey == GLFW_PRESS)
 	{
-		moveConstant = 20.0f;
+		moveConstant = 100.0f;
 	}
 
 	if (shiftKey == GLFW_RELEASE)
 	{
-		moveConstant = 10.0f;
+		moveConstant = 50.0f;
 	}
 }
 
@@ -414,6 +414,7 @@ unsigned int LoadCubeMap(std::vector<std::string> faces) {
 
 std::vector<Planet> planets;
 void SetPlanetInfo() {
+
 	Planet mercury;
 	mercury.radius = 0.244f;
 	mercury.majorAxis = 5.7f * distScale;
@@ -670,7 +671,7 @@ int main()
 
 	// Create a vertex array object that contains data on how to map vertex attributes
 	// (e.g., position, color) to vertex shader properties.
-	GLuint vao1, vao2;
+	GLuint vao1, vao2, sunVAO;
 	glGenVertexArrays(1, &vao1);
 	glBindVertexArray(vao1);
 
@@ -697,6 +698,27 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, vbo2);
 	glEnableVertexAttribArray(0);
 
+	// Vertex attribute 0 - Position
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+	// Vertex attribute 1 - Normals
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, nx)));
+
+	// Vertex attribute 2 - Color
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)(offsetof(Vertex, r)));
+
+	// Vertex attribute 3 - UV-coordinates
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, u)));
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glGenVertexArrays(1, &sunVAO);
+	glBindVertexArray(sunVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo2);
 	// Vertex attribute 0 - Position
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
@@ -742,7 +764,7 @@ int main()
 	int imageWidth, imageHeight, numChannels;
 
 	// Read the image data of our white.jpg image, and store it in an unsigned char array
-	unsigned char* imageData = stbi_load("blank.jpg", &imageWidth, &imageHeight, &numChannels, 0);
+	unsigned char* imageData = stbi_load("sun.jpg", &imageWidth, &imageHeight, &numChannels, 0);
 
 	// Make sure that we actually loaded the image before uploading the data to the GPU
 	if (imageData != nullptr)
@@ -772,12 +794,13 @@ int main()
 	}
 	else
 	{
-		std::cerr << "Failed to load white.jpg" << std::endl;
+		std::cerr << "Failed to load sun.jpg" << std::endl;
 	}
 
 	// Create a shader program
 	GLuint program = CreateShaderProgram("main.vsh", "main.fsh");
 	GLuint skyboxShader = CreateShaderProgram("skybox.vsh", "skybox.fsh");
+	GLuint lightShader = CreateShaderProgram("light.vsh", "light.fsh");
 
 	// Tell OpenGL the dimensions of the region where stuff will be drawn.
 	// For now, tell OpenGL to use the whole screen
@@ -919,20 +942,11 @@ int main()
 		glBindVertexArray(0);
 		glBindVertexArray(vao2);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-
-		glm::mat4 sphereTransforms(1.0f);
-		glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransforms));
-		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
-
-		GLint texUniform = glGetUniformLocation(program, "tex");
-		glUniform1i(texUniform, 0);
-
-		// Bind our blank.jpg texture to texture unit 0
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex0);
 		
 		float x1, z1;
 		// Declaration of elliptical constants
+		GLint texUniform = glGetUniformLocation(program, "tex");
+		glUniform1i(texUniform, 0);
 
 		for (auto currentPlanet : planets) {
 			glm::mat4 sphereTransform2 = glm::mat4(1.0f);
@@ -951,6 +965,27 @@ int main()
 
 		glBindVertexArray(0);
 
+		glUseProgram(lightShader);
+		glBindVertexArray(sunVAO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+
+		GLint lightTexUniform = glGetUniformLocation(lightShader, "tex");
+		glUniform1i(texUniform, tex0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex0);
+		glm::mat4 sphereTransforms(1.0f);
+
+		GLint lightProjectionMatrixUniform = glGetUniformLocation(lightShader, "projectionMatrix");
+		glUniformMatrix4fv(lightProjectionMatrixUniform, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+		GLint lightViewMatrixUniform = glGetUniformLocation(lightShader, "viewMatrix");
+		glUniformMatrix4fv(lightViewMatrixUniform, 1, GL_FALSE, glm::value_ptr(viewMatrix));
+		GLint lightModelMatrixUniform = glGetUniformLocation(lightShader, "modelMatrix");
+
+		glUniformMatrix4fv(lightModelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransforms));
+		glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
+
+		glBindVertexArray(0);
 		// Movement
 		glfwGetCursorPos(window, &xMousePos, &yMousePos);
 		ProcessMovement(window, eye, target, up, moveSpeed);

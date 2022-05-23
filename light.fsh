@@ -1,8 +1,15 @@
-#version 330
+#version 330 core
+out vec4 fragColor;
 
-out vec4 FragColor;
+in vec2 outUV;
+
+uniform sampler2D tex;
 
 void main()
 {
-	FragColor = vec4(1.0);
+	vec4 processedLight = vec4(1.0f);
+	vec4 sampledColor = texture(tex, outUV);
+
+	fragColor = processedLight * sampledColor;
+	//fragColor = processedLight;
 }

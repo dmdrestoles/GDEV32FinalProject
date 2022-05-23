@@ -131,6 +131,8 @@ struct Vertex
 struct Planet {
 	GLfloat radius, majorAxis, minorAxis, angle, speed, eccentricity;
 	GLfloat cx, cy, cz;
+	std::string textureMap;
+	GLuint texture;
 	
 	Planet(){
 		radius = 1.0f;
@@ -156,6 +158,46 @@ struct Planet {
 
 	void ComputeMinorAxis() {
 		minorAxis = majorAxis * sqrt(1 - (pow(eccentricity, 2)));
+	}
+
+	void LoadTexture() {
+		glGenTextures(1, &texture);
+		stbi_set_flip_vertically_on_load(true);
+
+		int imageWidth, imageHeight, numChannels;
+
+		unsigned char* imageData = stbi_load(textureMap.c_str(), &imageWidth, &imageHeight, &numChannels, 0);
+
+		// Make sure that we actually loaded the image before uploading the data to the GPU
+		if (imageData != nullptr)
+		{
+			// Our texture is 2D, so we bind our texture to the GL_TEXTURE_2D target
+			glBindTexture(GL_TEXTURE_2D, texture);
+
+			// Set the filtering methods for magnification and minification
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+			// Set the wrapping method for the s-axis (x-axis) and t-axis (y-axis)
+			// Try experimenting with different wrapping methods introduced in the textures slide set
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+			// Upload the image data to GPU memory
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, imageWidth, imageHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, imageData);
+
+			// If we set minification to use mipmaps, we can tell OpenGL to generate the mipmaps for us
+			//glGenerateMipmap(GL_TEXTURE_2D);
+
+			// Once we have copied the data over to the GPU, we can delete
+			// the data on the CPU side, since we won't be using it anymore
+			stbi_image_free(imageData);
+			imageData = nullptr;
+		}
+		else
+		{
+			std::cerr << "Failed to load white.jpg" << std::endl;
+		}
 	}
 };
 
@@ -377,7 +419,9 @@ void SetPlanetInfo() {
 	mercury.majorAxis = 5.7f * distScale;
 	mercury.eccentricity = 0.205f;
 	mercury.ComputeMinorAxis();
-	mercury.speed = 4.15f * revolutionSpeed;
+	mercury.speed = 4.15f ;
+	mercury.textureMap = "mercury.jpg";
+	mercury.LoadTexture();
 	mercury.cx = 0.f;
 	mercury.cy = 0.f;
 	mercury.cz = 0.f;
@@ -388,7 +432,9 @@ void SetPlanetInfo() {
 	venus.majorAxis = 10.8f * distScale;
 	venus.eccentricity = 0.007;
 	venus.ComputeMinorAxis();
-	venus.speed = 1.62 * revolutionSpeed;
+	venus.speed = 1.62;
+	venus.textureMap = "venus.jpg";
+	venus.LoadTexture();
 	venus.cx = 0.f;
 	venus.cy = 0.f;
 	venus.cz = 0.f;
@@ -399,7 +445,9 @@ void SetPlanetInfo() {
 	earth.majorAxis = 14.9f * distScale;
 	earth.eccentricity = 0.017;
 	earth.ComputeMinorAxis();
-	earth.speed = 1 * revolutionSpeed;
+	earth.speed = 1;
+	earth.textureMap = "earth.jpg";
+	earth.LoadTexture();
 	earth.cx = 0.f;
 	earth.cy = 0.f;
 	earth.cz = 0.f;
@@ -410,7 +458,9 @@ void SetPlanetInfo() {
 	mars.majorAxis = 22.8f * distScale;
 	mars.eccentricity = 0.093;
 	mars.ComputeMinorAxis();
-	mars.speed = 0.53f * revolutionSpeed;
+	mars.speed = 0.53f;
+	mars.textureMap = "mars.jpg";
+	mars.LoadTexture();
 	mars.cx = 0.f;
 	mars.cy = 0.f;
 	mars.cz = 0.f;
@@ -421,7 +471,9 @@ void SetPlanetInfo() {
 	jupiter.majorAxis = 89.f * distScale;
 	jupiter.eccentricity = 0.084;
 	jupiter.ComputeMinorAxis();
-	jupiter.speed = 0.08f * revolutionSpeed;
+	jupiter.speed = 0.08f;
+	jupiter.textureMap = "jupiter.jpg";
+	jupiter.LoadTexture();
 	jupiter.cx = 0.f;
 	jupiter.cy = 0.f;
 	jupiter.cz = 0.f;
@@ -432,7 +484,9 @@ void SetPlanetInfo() {
 	saturn.majorAxis = 143.7f * distScale;
 	saturn.eccentricity = 0.054f;
 	saturn.ComputeMinorAxis();
-	saturn.speed = 0.03f * revolutionSpeed;
+	saturn.speed = 0.03f;
+	saturn.textureMap = "saturn.jpg";
+	saturn.LoadTexture();
 	saturn.cx = 0.f;
 	saturn.cy = 0.f;
 	saturn.cz = 0.f;
@@ -443,7 +497,9 @@ void SetPlanetInfo() {
 	uranus.majorAxis = 287.1f * distScale;
 	uranus.eccentricity = 0.047f;
 	uranus.ComputeMinorAxis();
-	uranus.speed = 0.0119f * revolutionSpeed;
+	uranus.speed = 0.0119f;
+	uranus.textureMap = "uranus.jpg";
+	uranus.LoadTexture();
 	uranus.cx = 0.f;
 	uranus.cy = 0.f;
 	uranus.cz = 0.f;
@@ -454,7 +510,9 @@ void SetPlanetInfo() {
 	neptune.majorAxis = 453.0f * distScale;
 	neptune.eccentricity = 0.008f;
 	neptune.ComputeMinorAxis();
-	neptune.speed = 0.0061f * revolutionSpeed;
+	neptune.speed = 0.0061f;
+	neptune.textureMap = "neptune.jpg";
+	neptune.LoadTexture();
 	neptune.cx = 0.f;
 	neptune.cy = 0.f;
 	neptune.cz = 0.f;
@@ -880,6 +938,9 @@ int main()
 			glm::mat4 sphereTransform2 = glm::mat4(1.0f);
 			x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
 			z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, currentPlanet.texture);
 
 			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
 			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));

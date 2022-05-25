@@ -1,7 +1,7 @@
 /**
- * This is a program that renders a 3D scene with static and dynamic objects.
+ * This is a program that renders a simulation of the solar system.
  * @author Dan Mark D. Restoles (184116)
- * @version 2022-03-19 v2
+ * @version 2022-05-25 v1
  */
 
  /*
@@ -846,10 +846,8 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glm::mat4 modelMatrix(1.0f);
+
 	SetPlanetInfo();
-
-	int numberOfSegments = 64;
-
 	// Render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -882,6 +880,7 @@ int main()
 		glBindVertexArray(vao1);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+		// Cube renders from center of face then triangle-fans the render
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 6);
 		glDrawArrays(GL_TRIANGLE_FAN, 6, 6);
 		glDrawArrays(GL_TRIANGLE_FAN, 12, 6);

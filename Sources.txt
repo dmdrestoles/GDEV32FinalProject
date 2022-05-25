@@ -1,2 +1,5 @@
 https://math.stackexchange.com/questions/22064/calculating-a-point-that-lies-on-an-ellipse-given-an-angle
 https://learnopengl.com/Advanced-OpenGL/Cubemaps
+https://learnopengl.com/Lighting/Basic-Lighting
+https://www.solarsystemscope.com/textures/
+http://www.songho.ca/opengl/gl_sphere.html

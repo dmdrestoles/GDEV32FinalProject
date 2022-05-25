@@ -131,7 +131,7 @@ struct Vertex
 struct Planet {
 	GLfloat radius, majorAxis, minorAxis, angle, speed, eccentricity;
 	GLfloat cx, cy, cz;
-	std::string textureMap;
+	std::string textureMap, name;
 	GLuint texture;
 	
 	Planet(){
@@ -145,7 +145,8 @@ struct Planet {
 		speed = 90.0f;
 	}
 
-	Planet(float r, float m1, float m2, float a, float s, float x, float y, float z) {
+	Planet(std::string n, float r, float m1, float m2, float a, float s, float x, float y, float z) {
+		name = n;
 		radius = r;
 		majorAxis = m1;
 		minorAxis = m2;
@@ -201,8 +202,14 @@ struct Planet {
 	}
 };
 
-float moveConstant = 50.0f;
+const float SPEED = 50.0f;
+float moveConstant = SPEED;
 const float PI = acos(-1);
+bool initialMouseInput = true;
+
+double xMousePos, yMousePos, yaw, pitch;
+float sensitivity = 0.1f;
+glm::vec3 target;
 
 void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm::vec3& up, float moveSpeed)
 {
@@ -211,6 +218,7 @@ void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm:
 	int aKey = glfwGetKey(window, GLFW_KEY_A);
 	int dKey = glfwGetKey(window, GLFW_KEY_D);
 	int shiftKey = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+	int spaceKey = glfwGetKey(window, GLFW_KEY_SPACE);
 
 	if (sKey == GLFW_PRESS)
 	{
@@ -234,20 +242,22 @@ void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm:
 
 	if (shiftKey == GLFW_PRESS)
 	{
-		moveConstant = 100.0f;
+		moveConstant = SPEED * 2.f;
 	}
 
 	if (shiftKey == GLFW_RELEASE)
 	{
-		moveConstant = 50.0f;
+		moveConstant = SPEED;
+	}
+
+	if (spaceKey == GLFW_PRESS) {
+		eye = glm::vec3(-10.f, 0.f, 0.f);
+		target = glm::vec3(1.f, 0.f, 0.f);
+		yaw = 0.f;
+		pitch = 0.f;
 	}
 }
 
-bool initialMouseInput = true;
-
-double xMousePos, yMousePos, yaw, pitch;
-float sensitivity = 0.1f;
-glm::vec3 target;
 
 void ProcessMouse(GLFWwindow* window, double xpos, double ypos)
 {
@@ -416,11 +426,12 @@ std::vector<Planet> planets;
 void SetPlanetInfo() {
 
 	Planet mercury;
+	mercury.name = "Mercury";
 	mercury.radius = 0.244f;
 	mercury.majorAxis = 5.7f * distScale;
 	mercury.eccentricity = 0.205f;
 	mercury.ComputeMinorAxis();
-	mercury.speed = 4.15f ;
+	mercury.speed = 4.15f;
 	mercury.textureMap = "mercury.jpg";
 	mercury.LoadTexture();
 	mercury.cx = 0.f;
@@ -429,6 +440,7 @@ void SetPlanetInfo() {
 	mercury.angle = 0.0f;
 
 	Planet venus;
+	venus.name = "Venus";
 	venus.radius = 0.6502f;
 	venus.majorAxis = 10.8f * distScale;
 	venus.eccentricity = 0.007;
@@ -442,6 +454,7 @@ void SetPlanetInfo() {
 	venus.angle = 0.f;
 	
 	Planet earth;
+	earth.name = "Earth";
 	earth.radius = 0.6371f;
 	earth.majorAxis = 14.9f * distScale;
 	earth.eccentricity = 0.017;
@@ -455,6 +468,7 @@ void SetPlanetInfo() {
 	earth.angle = 0.f;
 
 	Planet mars;
+	mars.name = "Mars";
 	mars.radius = 0.339f;
 	mars.majorAxis = 22.8f * distScale;
 	mars.eccentricity = 0.093;
@@ -468,6 +482,7 @@ void SetPlanetInfo() {
 	mars.angle = 0.f;
 
 	Planet jupiter;
+	jupiter.name = "Jupiter";
 	jupiter.radius = 6.991f;
 	jupiter.majorAxis = 89.f * distScale;
 	jupiter.eccentricity = 0.084;
@@ -481,6 +496,7 @@ void SetPlanetInfo() {
 	jupiter.angle = 0.f;
 
 	Planet saturn;
+	saturn.name = "Saturn";
 	saturn.radius = 5.8232f;
 	saturn.majorAxis = 143.7f * distScale;
 	saturn.eccentricity = 0.054f;
@@ -494,6 +510,7 @@ void SetPlanetInfo() {
 	saturn.angle = 0.f;
 
 	Planet uranus;
+	uranus.name = "Uranus";
 	uranus.radius = 2.5362f;
 	uranus.majorAxis = 287.1f * distScale;
 	uranus.eccentricity = 0.047f;
@@ -507,6 +524,7 @@ void SetPlanetInfo() {
 	uranus.angle = 0.f;
 
 	Planet neptune;
+	neptune.name = "Neptune";
 	neptune.radius = 2.4622f;
 	neptune.majorAxis = 453.0f * distScale;
 	neptune.eccentricity = 0.008f;
@@ -555,7 +573,7 @@ int main()
 	// Tell GLFW to create a window
 	int windowWidth = 800;
 	int windowHeight = 600;
-	GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Hello Triangle", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "Solar System simulation", nullptr, nullptr);
 	if (window == nullptr)
 	{
 		std::cerr << "Failed to create GLFW window!" << std::endl;
@@ -816,8 +834,8 @@ int main()
 	glfwSetCursorPos(window, xMousePos, yMousePos);
 
 	// Declaration of camera units
-	glm::vec3 cameraPosition = { 0.0f, 200.0f, 0.f };
-	target = { 0.0f, 0.0f, 0.0f }; // Target is a specific point that the camera is looking at
+	glm::vec3 cameraPosition = { -10.0f, 0.f, 0.f };
+	target = { 1.0f, 0.0f, 0.0f }; // Target is a specific point that the camera is looking at
 	glm::vec3 up = { 0.0f, 1.0f, 0.0f }; // Global up vector (which will be used by the lookAt function to calculate the camera's right and up vectors)
 
 	glm::vec3 eye = cameraPosition;
@@ -829,6 +847,8 @@ int main()
 
 	glm::mat4 modelMatrix(1.0f);
 	SetPlanetInfo();
+
+	int numberOfSegments = 64;
 
 	// Render loop
 	while (!glfwWindowShouldClose(window))
@@ -849,7 +869,6 @@ int main()
 
 		// Skybox rendering
 		glDepthMask(GL_FALSE);
-		//glDepthFunc(GL_LEQUAL);
 		glUseProgram(skyboxShader);
 
 		glm::mat4 skyboxView = glm::mat4(glm::mat3(lookAtMatrix));
@@ -871,9 +890,7 @@ int main()
 		glDrawArrays(GL_TRIANGLE_FAN, 30, 6);
 		glDepthMask(GL_TRUE);
 		glBindVertexArray(0);
-		//glDepthFunc(GL_LESS);
-		// 
-		// Use the shader program that we created
+
 		glUseProgram(program);
 
 		float currentFrame = glfwGetTime();
@@ -881,11 +898,6 @@ int main()
 		lastFrame = currentFrame;
 
 		float moveSpeed = moveConstant * deltaTime;
-		// Construct our view matrix (for the "camera")
-		// Let's say we want to position our camera to be at (2, 1, 4) and looking down at the origin (0, 0, 0).
-		// For the position, remember that having our camera at (2, 1, 4) is the same as moving the entire world in the opposite direction (-2, -1, -4)
-		// As for the orientation of the camera, we can use the lookAt function, which glm kindly provides us
-
 		viewMatrix = lookAtMatrix * modelMatrix;
 		GLint viewMatrixUniform = glGetUniformLocation(program, "viewMatrix");
 		glUniformMatrix4fv(viewMatrixUniform, 1, GL_FALSE, glm::value_ptr(viewMatrix));
@@ -911,23 +923,6 @@ int main()
 		GLint diffuseColorUniform = glGetUniformLocation(program, "ptLight.diffuse");
 		glUniform3fv(diffuseColorUniform, 1, glm::value_ptr(diffuseColor));
 
-		// Specular
-		//glm::vec3 specularColor = glm::vec3(0.5294f, 0.8078f, 0.9216f);
-		glm::vec3 specularColor = glm::vec3(1.0f, 1.0f, 1.0f);
-		GLint specularColorUniform = glGetUniformLocation(program, "ptLight.specular");
-		glUniform3fv(specularColorUniform, 1, glm::value_ptr(specularColor));
-
-		GLint eyePositionUniform = glGetUniformLocation(program, "eye");
-		glUniform3fv(eyePositionUniform, 1, glm::value_ptr(eye));
-
-		glm::vec3 objectSpecular = glm::vec3(1.0f, 1.0f, 1.0f);
-		GLint objectSpecularUniform = glGetUniformLocation(program, "ptLight.objectSpecular");
-		glUniform3fv(objectSpecularUniform, 1, glm::value_ptr(objectSpecular));
-		
-		int objectShininess = 256;
-		GLint objectShininessUniform = glGetUniformLocation(program, "ptLight.shininess");
-		glUniform1i(objectShininessUniform, objectShininess);
-
 		glm::vec3 pointLightAttenuation = glm::vec3(0.0f, 0.f, 1.0f);
 		GLint plAttenuationUniform = glGetUniformLocation(program, "ptLight.attenuation");
 		glUniform3fv(plAttenuationUniform, 1, glm::value_ptr(pointLightAttenuation));
@@ -942,6 +937,9 @@ int main()
 		glBindVertexArray(0);
 		glBindVertexArray(vao2);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+		// Adjustments on proper orientation of planets
+		glm::vec3 planeAngle = glm::vec3(-1.0f, 0.f, 0.f);
+		float angle = 90.0f;
 		
 		float x1, z1;
 		// Declaration of elliptical constants
@@ -950,6 +948,7 @@ int main()
 
 		for (auto currentPlanet : planets) {
 			glm::mat4 sphereTransform2 = glm::mat4(1.0f);
+
 			x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
 			z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
 
@@ -957,8 +956,10 @@ int main()
 			glBindTexture(GL_TEXTURE_2D, currentPlanet.texture);
 
 			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, z1));
-			sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(currentPlanet.radius));
+			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, -z1));
+			sphereTransform2 = glm::rotate(sphereTransform2, glm::radians(angle), planeAngle);
+			// Negatively scaling the objects flips the object in the correct orientation
+			sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(-currentPlanet.radius));			
 			glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
 			glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 		}
@@ -975,6 +976,7 @@ int main()
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex0);
 		glm::mat4 sphereTransforms(1.0f);
+		sphereTransforms = glm::rotate(sphereTransforms, glm::radians(angle), planeAngle);
 
 		GLint lightProjectionMatrixUniform = glGetUniformLocation(lightShader, "projectionMatrix");
 		glUniformMatrix4fv(lightProjectionMatrixUniform, 1, GL_FALSE, glm::value_ptr(projectionMatrix));

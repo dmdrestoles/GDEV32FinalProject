@@ -24,6 +24,9 @@ uniform mat4 viewMatrix;
 uniform mat4 modelMatrix;
 uniform mat4 normalMatrix;
 
+mat2 uvRotation;
+float angle;
+
 void main()
 {
 	// Transform our vertex position to homogeneous coordinates.
@@ -42,6 +45,10 @@ void main()
 	// We pass the color of the current vertex to our output variable
 	outColor = vertexColor;
 
+	float s = sin(angle);
+	float c = cos(angle);
+
+	uvRotation = mat2(0.f, -1.f, 1.f, 0.f);
 	// We pass the UV-coordinates of the current vertex to our output variable
 	outUV = vertexUV;
 

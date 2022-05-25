@@ -56,20 +56,6 @@ struct Diffuse
 	vec3 diffuse;
 };
 
-struct Specular
-{
-	vec3 color;
-	vec3 normal; 
-	vec3 fragPos; 
-	vec3 lightPos;
-	vec3 direction;
-	int shininess;
-	vec3 viewPos;
-	vec3 objectSpecular;
-	vec3 attenuation;
-	vec3 specular;
-};
-
 uniform vec3 eye;
 uniform PointLight ptLight;
 
@@ -97,20 +83,8 @@ vec3 ComputeDiffuse(Diffuse diffuse)
 	
 	return compDiff;
 }
-
-vec3 ComputeSpecular(Specular specular)
-{
-	vec3 viewDir = normalize(specular.viewPos - specular.fragPos);
-	vec3 lightDir = normalize(specular.lightPos - specular.fragPos);
-	vec3 reflectDir = reflect(-lightDir, specular.normal);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0f), specular.shininess);
-	vec3 compSpec = spec * specular.objectSpecular * specular.color;
-
-	return compSpec;
-}
 Ambience plAmbience;
 Diffuse plDiffuse;
-Specular plSpecular;
 
 void main()
 {
@@ -128,22 +102,12 @@ void main()
 	plDiffuse.lightPos = ptLight.position;
 	plDiffuse.attenuation = ptLight.attenuation;
 
-	plSpecular.color = ptLight.specular;
-	plSpecular.shininess = ptLight.shininess;
-	plSpecular.normal = outNormal; 
-	plSpecular.fragPos = outPos; 
-	plSpecular.lightPos = ptLight.position;
-	plSpecular.viewPos = eye;
-	plSpecular.objectSpecular = ptLight.objectSpecular;
-	plSpecular.attenuation = ptLight.attenuation;
-	
 	float ptLightAttenuationFactor = ComputeAttenuation(ptLight.position, outPos, ptLight.attenuation);
 
 	plAmbience.ambience = ptLightAttenuationFactor * ComputeAmbience(plAmbience);
 	plDiffuse.diffuse = ptLightAttenuationFactor * ComputeDiffuse(plDiffuse);
-	plSpecular.specular = ptLightAttenuationFactor * ComputeSpecular(plSpecular);
 
-	vec3 finalLightColor = (plAmbience.ambience + plDiffuse.diffuse + plSpecular.specular) * outColor;
+	vec3 finalLightColor = (plAmbience.ambience + plDiffuse.diffuse) * outColor;
 	vec4 processedLight = vec4(finalLightColor, 1.0f);
 	vec4 sampledColor = texture(tex, outUV);
 

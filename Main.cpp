@@ -942,8 +942,6 @@ int main()
 		
 		float x1, z1;
 		// Declaration of elliptical constants
-		GLint texUniform = glGetUniformLocation(program, "tex");
-		glUniform1i(texUniform, 0);
 
 		for (auto currentPlanet : planets) {
 			glm::mat4 sphereTransform2 = glm::mat4(1.0f);
@@ -968,9 +966,6 @@ int main()
 		glUseProgram(lightShader);
 		glBindVertexArray(sunVAO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-
-		GLint lightTexUniform = glGetUniformLocation(lightShader, "tex");
-		glUniform1i(texUniform, tex0);
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tex0);

@@ -18,12 +18,6 @@ out vec4 fragColor;
 // Uniform variable that will hold the texture unit of the texture that we want to use
 uniform sampler2D tex;
 
-// If we want to simultaneously use another texture at a different texture unit,
-// we can create another uniform for it.
-// Example:
-// uniform sampler2D tex1;
-// We can then set the value of this uniform to 1 (for texture unit 1) in our Main.cpp
-
 struct PointLight
 {
 	vec3 ambient;

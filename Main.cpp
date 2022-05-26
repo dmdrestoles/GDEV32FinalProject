@@ -131,7 +131,7 @@ struct Vertex
 
 struct Planet {
 	GLfloat radius, majorAxis, minorAxis, angle, speed, eccentricity;
-	GLfloat cx, cy, cz;
+	GLfloat cx, cy, cz, x1, y1, z1;
 	GLfloat phaseShift;
 	std::string textureMap, name;
 	GLuint texture;
@@ -212,6 +212,70 @@ bool initialMouseInput = true;
 double xMousePos, yMousePos, yaw, pitch;
 float sensitivity = 0.1f;
 glm::vec3 target;
+std::vector<Planet> planets;
+int focusedPlanet = 0;
+bool isFollowingPlanet = false;
+
+void SetCamera(glm::vec3& eye, glm::vec3& target, glm::vec3 pos, glm::vec3 look) {
+	eye = pos;
+	target = look;
+}
+
+void ResetCameraView(glm::vec3& target, glm::vec3 look) {
+	target = glm::normalize(-look);
+	initialMouseInput = true;
+
+}
+
+void FollowPlanet(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm::vec3& up) {
+	int resetFocus = glfwGetKey(window, GLFW_KEY_F);
+	int mercury = glfwGetKey(window, GLFW_KEY_1);
+	int venus = glfwGetKey(window, GLFW_KEY_2);
+	int earth = glfwGetKey(window, GLFW_KEY_3);
+	int mars = glfwGetKey(window, GLFW_KEY_4);
+	int jupiter = glfwGetKey(window, GLFW_KEY_5);
+	int saturn = glfwGetKey(window, GLFW_KEY_6);
+	int uranus = glfwGetKey(window, GLFW_KEY_7);
+	int neptune = glfwGetKey(window, GLFW_KEY_8);
+
+	if (mercury == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 0;
+	}
+	if (venus == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 1;
+	}
+	if (earth == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 2;
+	}
+	if (mars == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 3;
+	}
+	if (jupiter == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 4;
+	}
+	if (saturn == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 5;
+	}
+	if (uranus == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 6;
+	}
+	if (neptune == GLFW_PRESS) {
+		isFollowingPlanet = true;
+		focusedPlanet = 7;
+	}
+	if (resetFocus == GLFW_PRESS) {
+		isFollowingPlanet = false;
+		focusedPlanet = 0;
+	}
+
+}
 
 void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm::vec3& up, float moveSpeed)
 {
@@ -221,6 +285,7 @@ void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm:
 	int dKey = glfwGetKey(window, GLFW_KEY_D);
 	int shiftKey = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 	int spaceKey = glfwGetKey(window, GLFW_KEY_SPACE);
+	glm::vec3 look = glm::vec3(1.f, 0.f, 0.f);
 
 	if (sKey == GLFW_PRESS)
 	{
@@ -253,10 +318,9 @@ void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm:
 	}
 
 	if (spaceKey == GLFW_PRESS) {
-		eye = glm::vec3(-10.f, 0.f, 0.f);
-		target = glm::vec3(1.f, 0.f, 0.f);
-		yaw = 0.f;
-		pitch = 0.f;
+		SetCamera(eye, target, glm::vec3(-10.f, 0.f, 0.f), glm::vec3(1.f, 0.f, 0.f));
+		ResetCameraView(target, look);
+		isFollowingPlanet = false;
 	}
 }
 
@@ -424,7 +488,6 @@ unsigned int LoadCubeMap(std::vector<std::string> faces) {
 	return textureID;
 }
 
-std::vector<Planet> planets;
 void SetPlanetInfo() {
 
 	Planet mercury;
@@ -959,13 +1022,15 @@ int main()
 				currentPlanet.phaseShift = dist(gen);
 			}
 			x1 = currentPlanet.majorAxis * glm::cos(glm::radians(((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed) + currentPlanet.phaseShift));
-			z1 = currentPlanet.minorAxis * glm::sin(glm::radians(((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed) + currentPlanet.phaseShift));
+			z1 = currentPlanet.minorAxis * -glm::sin(glm::radians(((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed) + currentPlanet.phaseShift));
+			currentPlanet.x1 = x1;
+			currentPlanet.z1 = z1;
 			
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, currentPlanet.texture);
 
 			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.cx, currentPlanet.cy, currentPlanet.cz));
-			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(x1, 0.f, -z1));
+			sphereTransform2 = glm::translate(sphereTransform2, glm::vec3(currentPlanet.x1, 0.f, currentPlanet.z1));
 			sphereTransform2 = glm::rotate(sphereTransform2, glm::radians(angle), planeAngle);
 			// Negatively scaling the objects flips the object in the correct orientation
 			sphereTransform2 = glm::scale(sphereTransform2, glm::vec3(-currentPlanet.radius));			
@@ -973,6 +1038,11 @@ int main()
 			glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 		}
 		firstFrame = false;
+
+		std::cout << "Focused planet: " << planets[focusedPlanet].name << std::endl;
+		if (isFollowingPlanet) {
+			eye = glm::vec3(planets[focusedPlanet].x1, planets[focusedPlanet].radius + 2, planets[focusedPlanet].z1);
+		}
 
 		glBindVertexArray(0);
 
@@ -998,6 +1068,7 @@ int main()
 		// Movement
 		glfwGetCursorPos(window, &xMousePos, &yMousePos);
 		ProcessMovement(window, eye, target, up, moveSpeed);
+		FollowPlanet(window, eye, target, up);
 		ProcessRevolutionSpeed(window, revolutionSpeed);
 		//std::cout << "Revolution speed:" << revolutionSpeed << std::endl;
 		glfwSetCursorPosCallback(window, ProcessMouse);

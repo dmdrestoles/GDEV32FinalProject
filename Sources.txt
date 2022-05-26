@@ -3,3 +3,4 @@ https://learnopengl.com/Advanced-OpenGL/Cubemaps
 https://learnopengl.com/Lighting/Basic-Lighting
 https://www.solarsystemscope.com/textures/
 http://www.songho.ca/opengl/gl_sphere.html
+https://www.techiedelight.com/generate-random-float-value-in-cpp/

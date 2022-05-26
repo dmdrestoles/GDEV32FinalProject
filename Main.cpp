@@ -23,6 +23,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <random>
 
 // Include stb_image for loading images
 // Remember to define STB_IMAGE_IMPLEMENTATION first before including
@@ -131,6 +132,7 @@ struct Vertex
 struct Planet {
 	GLfloat radius, majorAxis, minorAxis, angle, speed, eccentricity;
 	GLfloat cx, cy, cz;
+	GLfloat phaseShift;
 	std::string textureMap, name;
 	GLuint texture;
 	
@@ -848,6 +850,13 @@ int main()
 	glm::mat4 modelMatrix(1.0f);
 
 	SetPlanetInfo();
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_real_distribution<> dist(0, 360);
+
+	bool firstFrame = true;
+
 	// Render loop
 	while (!glfwWindowShouldClose(window))
 	{
@@ -943,12 +952,15 @@ int main()
 		float x1, z1;
 		// Declaration of elliptical constants
 
-		for (auto currentPlanet : planets) {
+		for (auto& currentPlanet : planets) {
 			glm::mat4 sphereTransform2 = glm::mat4(1.0f);
 
-			x1 = currentPlanet.majorAxis * glm::cos(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
-			z1 = currentPlanet.minorAxis * glm::sin(glm::radians((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed));
-
+			if (firstFrame) {
+				currentPlanet.phaseShift = dist(gen);
+			}
+			x1 = currentPlanet.majorAxis * glm::cos(glm::radians(((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed) + currentPlanet.phaseShift));
+			z1 = currentPlanet.minorAxis * glm::sin(glm::radians(((float)glfwGetTime() * currentPlanet.speed * revolutionSpeed) + currentPlanet.phaseShift));
+			
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, currentPlanet.texture);
 
@@ -960,6 +972,7 @@ int main()
 			glUniformMatrix4fv(modelMatrixUniform, 1, GL_FALSE, glm::value_ptr(sphereTransform2));
 			glDrawElements(GL_TRIANGLES, sphereIndices.size(), GL_UNSIGNED_INT, (void*)0);
 		}
+		firstFrame = false;
 
 		glBindVertexArray(0);
 

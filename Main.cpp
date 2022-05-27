@@ -219,15 +219,11 @@ bool isFollowingPlanet = false;
 void SetCamera(glm::vec3& eye, glm::vec3& target, glm::vec3 pos, glm::vec3 look) {
 	eye = pos;
 	target = look;
+	yaw = 0.f;
+	pitch = 0.f;
 }
 
-void ResetCameraView(glm::vec3& target, glm::vec3 look) {
-	target = glm::normalize(-look);
-	initialMouseInput = true;
-
-}
-
-void FollowPlanet(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm::vec3& up) {
+void FollowPlanet(GLFWwindow* window) {
 	int resetFocus = glfwGetKey(window, GLFW_KEY_F);
 	int mercury = glfwGetKey(window, GLFW_KEY_1);
 	int venus = glfwGetKey(window, GLFW_KEY_2);
@@ -241,38 +237,47 @@ void FollowPlanet(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm::ve
 	if (mercury == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 0;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (venus == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 1;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (earth == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 2;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (mars == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 3;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (jupiter == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 4;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (saturn == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 5;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (uranus == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 6;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (neptune == GLFW_PRESS) {
 		isFollowingPlanet = true;
 		focusedPlanet = 7;
+		std::cout << "Current planet: " << planets[focusedPlanet].name << std::endl;
 	}
 	if (resetFocus == GLFW_PRESS) {
 		isFollowingPlanet = false;
 		focusedPlanet = 0;
+		std::cout << "Camera set to free camera." << std::endl;
 	}
 
 }
@@ -319,7 +324,6 @@ void ProcessMovement(GLFWwindow* window, glm::vec3& eye, glm::vec3& target, glm:
 
 	if (spaceKey == GLFW_PRESS) {
 		SetCamera(eye, target, glm::vec3(-10.f, 0.f, 0.f), glm::vec3(1.f, 0.f, 0.f));
-		ResetCameraView(target, look);
 		isFollowingPlanet = false;
 	}
 }
@@ -1039,9 +1043,8 @@ int main()
 		}
 		firstFrame = false;
 
-		std::cout << "Focused planet: " << planets[focusedPlanet].name << std::endl;
 		if (isFollowingPlanet) {
-			eye = glm::vec3(planets[focusedPlanet].x1, planets[focusedPlanet].radius + 2, planets[focusedPlanet].z1);
+			eye = glm::vec3(planets[focusedPlanet].x1, planets[focusedPlanet].radius + 1, planets[focusedPlanet].z1);
 		}
 
 		glBindVertexArray(0);
@@ -1068,7 +1071,7 @@ int main()
 		// Movement
 		glfwGetCursorPos(window, &xMousePos, &yMousePos);
 		ProcessMovement(window, eye, target, up, moveSpeed);
-		FollowPlanet(window, eye, target, up);
+		FollowPlanet(window);
 		ProcessRevolutionSpeed(window, revolutionSpeed);
 		//std::cout << "Revolution speed:" << revolutionSpeed << std::endl;
 		glfwSetCursorPosCallback(window, ProcessMouse);

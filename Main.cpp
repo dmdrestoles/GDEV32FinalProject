@@ -1,7 +1,7 @@
 /**
  * This is a program that renders a simulation of the solar system.
  * @author Dan Mark D. Restoles (184116)
- * @version 2022-05-25 v1
+ * @version 2022-05-27 v2
  */
 
  /*
